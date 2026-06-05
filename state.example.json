@@ -1,0 +1,18 @@
+{
+  "p1Name": "",
+  "p1Deck": "",
+  "p2Name": "",
+  "p2Deck": "",
+  "tournamentName": "",
+  "roundName": "",
+  "scoreLeft": 0,
+  "scoreRight": 0,
+  "timerSeconds": 2400,
+  "timerRunning": false,
+  "leftImg1": "",
+  "leftImg2": "",
+  "rightImg1": "",
+  "rightImg2": "",
+  "p1CardImg": "",
+  "p2CardImg": ""
+}

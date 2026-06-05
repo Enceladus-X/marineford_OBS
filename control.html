@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Marinford 방송 컨트롤</title>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+  :root { --gold:#c9a84c; --gold-light:#e8c96a; --bg:#0d0d18; --surface:#14141f; --surface2:#1c1c2e; --border:rgba(201,168,76,0.25); --text:#f0f0f0; --text-dim:rgba(240,240,240,0.5); --danger:#e03a3a; --success:#3aae6e; --warning:#e07b3a; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'Noto Sans KR',sans-serif; min-height:100vh; padding:24px; }
+  h1 { font-family:'Bebas Neue',sans-serif; font-size:28px; color:var(--gold); letter-spacing:0.12em; display:flex; align-items:center; gap:12px; margin-bottom:24px; }
+  h1 svg { width:32px; height:32px; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; max-width:960px; margin:0 auto; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:20px; }
+  .card.full { grid-column:1/-1; }
+  .card-title { font-family:'Black Han Sans',sans-serif; font-size:13px; color:var(--gold); letter-spacing:0.12em; text-transform:uppercase; margin-bottom:16px; padding-bottom:10px; border-bottom:1px solid var(--border); }
+  label { display:block; font-size:11px; color:var(--text-dim); letter-spacing:0.08em; margin-bottom:5px; margin-top:12px; }
+  label:first-of-type { margin-top:0; }
+  input[type="text"], input[type="number"] { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-family:'Noto Sans KR',sans-serif; font-size:14px; padding:9px 12px; outline:none; transition:border-color 0.2s; }
+  input:focus { border-color:var(--gold); }
+  input[type="file"] { display:none; }
+
+  .img-slot-ctrl { margin-top:14px; }
+  .img-slot-ctrl + .img-slot-ctrl { margin-top:16px; padding-top:14px; border-top:1px solid var(--border); }
+  .img-slot-label { font-size:11px; color:var(--text-dim); letter-spacing:0.08em; margin-bottom:6px; }
+  .img-preview-wrap { width:100%; height:100px; background:var(--surface2); border:1px dashed var(--border); border-radius:6px; display:flex; align-items:center; justify-content:center; overflow:hidden; margin-bottom:8px; cursor:pointer; }
+  .img-preview-wrap img { max-width:100%; max-height:100%; object-fit:contain; display:none; }
+  .img-preview-wrap img.loaded { display:block; }
+  .img-placeholder { font-size:11px; color:var(--text-dim); text-align:center; pointer-events:none; }
+  .img-input-row { display:flex; gap:8px; align-items:center; }
+  .img-input-row input { flex:1; font-size:12px; }
+  .img-clear-btn { padding:8px 12px; border-radius:6px; background:var(--surface2); border:1px solid var(--border); color:var(--text-dim); font-size:12px; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+  .img-clear-btn:hover { border-color:var(--danger); color:var(--danger); }
+
+  .score-val { font-family:'Bebas Neue',sans-serif; font-size:52px; color:#fff; min-width:48px; text-align:center; line-height:1; }
+  .score-sep-display { font-family:'Bebas Neue',sans-serif; font-size:36px; color:var(--gold); }
+  .score-player-label { font-size:11px; color:var(--text-dim); text-align:center; margin-bottom:6px; letter-spacing:0.05em; }
+  .score-col { text-align:center; }
+  .btn-row { display:flex; gap:8px; justify-content:center; margin-top:4px; }
+
+  .btn { padding:9px 18px; border-radius:6px; border:none; font-family:'Noto Sans KR',sans-serif; font-size:13px; font-weight:700; cursor:pointer; transition:all 0.15s; letter-spacing:0.03em; }
+  .btn:active { transform:scale(0.96); }
+  .btn-gold { background:var(--gold); color:#1a1200; }
+  .btn-gold:hover { background:var(--gold-light); }
+  .btn-outline { background:transparent; border:1px solid var(--border); color:var(--text-dim); }
+  .btn-outline:hover { border-color:var(--gold); color:var(--text); }
+  .btn-danger { background:var(--danger); color:#fff; }
+  .btn-danger:hover { background:#f04545; }
+  .btn-success { background:var(--success); color:#fff; font-size:15px; padding:11px 28px; }
+  .btn-success:hover { background:#45c07f; }
+  .btn-warning { background:var(--warning); color:#fff; font-size:15px; padding:11px 28px; }
+  .btn-sm { padding:6px 14px; font-size:20px; min-width:44px; border-radius:6px; background:var(--surface2); border:1px solid var(--border); color:var(--text); font-weight:900; cursor:pointer; }
+  .btn-sm:hover { border-color:var(--gold); color:var(--gold); }
+
+  .timer-display-big { font-family:'Bebas Neue',sans-serif; font-size:72px; text-align:center; color:#fff; letter-spacing:0.06em; line-height:1; margin:8px 0 4px; transition:color 0.3s; }
+  .timer-display-big.warning { color:var(--warning); }
+  .timer-display-big.danger { color:var(--danger); animation:pulse 0.8s infinite; }
+  .timer-btn-row { display:flex; gap:10px; justify-content:center; margin-top:14px; flex-wrap:wrap; }
+  .timer-preset-row { display:flex; gap:8px; justify-content:center; margin-top:10px; flex-wrap:wrap; }
+  .btn-preset { padding:6px 14px; border-radius:6px; background:var(--surface2); border:1px solid var(--border); color:var(--text-dim); font-family:'Noto Sans KR',sans-serif; font-size:12px; cursor:pointer; transition:all 0.15s; }
+  .btn-preset:hover { border-color:var(--gold); color:var(--gold); }
+
+  #status-bar { text-align:center; font-size:12px; color:var(--success); margin-top:16px; height:16px; letter-spacing:0.05em; opacity:0; transition:opacity 0.3s; }
+  #status-bar.show { opacity:1; }
+  #status-bar.err { color:var(--danger); }
+  .apply-bar { display:flex; gap:12px; align-items:center; justify-content:flex-end; margin-bottom:16px; max-width:960px; margin-left:auto; margin-right:auto; }
+  .divider { height:1px; background:var(--border); margin:14px 0; }
+  .score-reset-row { display:flex; justify-content:center; margin-top:14px; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.45} }
+</style>
+</head>
+<body>
+<div style="max-width:960px;margin:0 auto;">
+  <h1>
+    <svg viewBox="0 0 32 32" fill="none">
+      <path d="M16 1 L30 7 L30 18 C30 25 16 31 16 31 C16 31 2 25 2 18 L2 7 Z" stroke="#c9a84c" stroke-width="2" fill="rgba(201,168,76,0.1)"/>
+      <text x="16" y="22" text-anchor="middle" font-family="Bebas Neue,sans-serif" font-size="13" fill="#c9a84c">M</text>
+    </svg>
+    MARINFORD 방송 컨트롤
+  </h1>
+
+  <div class="apply-bar">
+    <span style="font-size:12px;color:var(--text-dim);">모든 변경사항은 즉시 오버레이에 반영됩니다</span>
+    <button class="btn btn-danger" onclick="resetAll()">전체 초기화</button>
+  </div>
+
+  <div class="grid">
+
+    <div class="card full">
+      <div class="card-title">📋 대회 정보</div>
+      <label>대회명</label>
+      <input type="text" id="tournamentName" oninput="push()">
+    </div>
+
+    <div class="card">
+      <div class="card-title">🔵 플레이어 1 (좌측)</div>
+      <label>닉네임</label><input type="text" id="p1Name" oninput="push()">
+      <div class="img-slot-ctrl" style="margin-top:14px;">
+        <div class="img-slot-label">명함 이미지</div>
+        <div class="img-preview-wrap" style="height:70px;" onclick="triggerFile('p1card-file')">
+          <img id="p1card-preview" src="" alt=""><div class="img-placeholder" id="p1card-ph">클릭하여 선택</div>
+        </div>
+        <div class="img-input-row">
+          <input type="text" id="p1CardImg" placeholder="경로 또는 URL" oninput="onPath('p1CardImg','p1card-preview','p1card-ph')">
+          <button class="img-clear-btn" onclick="clearImg('p1CardImg','p1card-preview','p1card-ph')">삭제</button>
+        </div>
+        <input type="file" id="p1card-file" accept="image/*" onchange="onFile(this,'p1CardImg','p1card-preview','p1card-ph')">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🔴 플레이어 2 (우측)</div>
+      <label>닉네임</label><input type="text" id="p2Name" oninput="push()">
+      <div class="img-slot-ctrl" style="margin-top:14px;">
+        <div class="img-slot-label">명함 이미지</div>
+        <div class="img-preview-wrap" style="height:70px;" onclick="triggerFile('p2card-file')">
+          <img id="p2card-preview" src="" alt=""><div class="img-placeholder" id="p2card-ph">클릭하여 선택</div>
+        </div>
+        <div class="img-input-row">
+          <input type="text" id="p2CardImg" placeholder="경로 또는 URL" oninput="onPath('p2CardImg','p2card-preview','p2card-ph')">
+          <button class="img-clear-btn" onclick="clearImg('p2CardImg','p2card-preview','p2card-ph')">삭제</button>
+        </div>
+        <input type="file" id="p2card-file" accept="image/*" onchange="onFile(this,'p2CardImg','p2card-preview','p2card-ph')">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🖼 좌측 이미지 패널</div>
+      <div class="img-slot-ctrl">
+        <div class="img-slot-label">슬롯 1</div>
+        <div class="img-preview-wrap" onclick="triggerFile('lp1-file')">
+          <img id="lp1-preview" src="" alt=""><div class="img-placeholder" id="lp1-ph">클릭하여 이미지 선택</div>
+        </div>
+        <div class="img-input-row">
+          <input type="text" id="leftImg1" placeholder="경로 또는 URL" oninput="onPath('leftImg1','lp1-preview','lp1-ph')">
+          <button class="img-clear-btn" onclick="clearImg('leftImg1','lp1-preview','lp1-ph')">삭제</button>
+        </div>
+        <input type="file" id="lp1-file" accept="image/*" onchange="onFile(this,'leftImg1','lp1-preview','lp1-ph')">
+      </div>
+      <div class="img-slot-ctrl">
+        <div class="img-slot-label">슬롯 2 (하단)</div>
+        <div class="img-preview-wrap" onclick="triggerFile('lp2-file')">
+          <img id="lp2-preview" src="" alt=""><div class="img-placeholder" id="lp2-ph">클릭하여 이미지 선택</div>
+        </div>
+        <div class="img-input-row">
+          <input type="text" id="leftImg2" placeholder="경로 또는 URL" oninput="onPath('leftImg2','lp2-preview','lp2-ph')">
+          <button class="img-clear-btn" onclick="clearImg('leftImg2','lp2-preview','lp2-ph')">삭제</button>
+        </div>
+        <input type="file" id="lp2-file" accept="image/*" onchange="onFile(this,'leftImg2','lp2-preview','lp2-ph')">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🖼 우측 이미지 패널</div>
+      <div class="img-slot-ctrl">
+        <div class="img-slot-label">슬롯 1</div>
+        <div class="img-preview-wrap" onclick="triggerFile('rp1-file')">
+          <img id="rp1-preview" src="" alt=""><div class="img-placeholder" id="rp1-ph">클릭하여 이미지 선택</div>
+        </div>
+        <div class="img-input-row">
+          <input type="text" id="rightImg1" placeholder="경로 또는 URL" oninput="onPath('rightImg1','rp1-preview','rp1-ph')">
+          <button class="img-clear-btn" onclick="clearImg('rightImg1','rp1-preview','rp1-ph')">삭제</button>
+        </div>
+        <input type="file" id="rp1-file" accept="image/*" onchange="onFile(this,'rightImg1','rp1-preview','rp1-ph')">
+      </div>
+      <div class="img-slot-ctrl">
+        <div class="img-slot-label">슬롯 2 (하단)</div>
+        <div class="img-preview-wrap" onclick="triggerFile('rp2-file')">
+          <img id="rp2-preview" src="" alt=""><div class="img-placeholder" id="rp2-ph">클릭하여 이미지 선택</div>
+        </div>
+        <div class="img-input-row">
+          <input type="text" id="rightImg2" placeholder="경로 또는 URL" oninput="onPath('rightImg2','rp2-preview','rp2-ph')">
+          <button class="img-clear-btn" onclick="clearImg('rightImg2','rp2-preview','rp2-ph')">삭제</button>
+        </div>
+        <input type="file" id="rp2-file" accept="image/*" onchange="onFile(this,'rightImg2','rp2-preview','rp2-ph')">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🏆 스코어</div>
+      <div style="display:flex;gap:16px;justify-content:center;align-items:flex-end;">
+        <div class="score-col">
+          <div class="score-player-label" id="score-p1-label">플레이어 1</div>
+          <div class="btn-row">
+            <button class="btn-sm" onclick="changeScore('left',-1)">−</button>
+            <div class="score-val" id="scoreL">0</div>
+            <button class="btn-sm" onclick="changeScore('left',+1)">+</button>
+          </div>
+        </div>
+        <div class="score-sep-display" style="margin-bottom:14px;">:</div>
+        <div class="score-col">
+          <div class="score-player-label" id="score-p2-label">플레이어 2</div>
+          <div class="btn-row">
+            <button class="btn-sm" onclick="changeScore('right',-1)">−</button>
+            <div class="score-val" id="scoreR">0</div>
+            <button class="btn-sm" onclick="changeScore('right',+1)">+</button>
+          </div>
+        </div>
+      </div>
+      <div class="score-reset-row"><button class="btn btn-outline" onclick="resetScore()">스코어 초기화</button></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">⏱ 타이머</div>
+      <div class="timer-display-big" id="timerDisplay">40:00</div>
+      <div class="timer-btn-row">
+        <button class="btn btn-success" id="startStopBtn" onclick="toggleTimer()">▶ 시작</button>
+        <button class="btn btn-outline" onclick="resetTimer()">↺ 리셋</button>
+      </div>
+      <div class="divider"></div>
+      <div style="font-size:11px;color:var(--text-dim);text-align:center;margin-bottom:8px;">프리셋</div>
+      <div class="timer-preset-row">
+        <button class="btn-preset" onclick="setTimer(40)">40분</button>
+        <button class="btn-preset" onclick="setTimer(35)">35분</button>
+        <button class="btn-preset" onclick="setTimer(30)">30분</button>
+        <button class="btn-preset" onclick="setTimer(25)">25분</button>
+        <button class="btn-preset" onclick="setTimer(20)">20분</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:12px;">
+        <input type="number" id="customMin" placeholder="직접 입력 (분)" min="1" max="99" style="flex:1;" onkeydown="if(event.key==='Enter')setTimerFromInput()">
+        <button class="btn btn-gold" onclick="setTimerFromInput()">설정</button>
+      </div>
+    </div>
+
+  </div>
+  <div id="status-bar">✓ 오버레이 업데이트됨</div>
+</div>
+
+<script>
+let state = { p1Name:'', p1Deck:'', p2Name:'', p2Deck:'', tournamentName:'', roundName:'', scoreLeft:0, scoreRight:0, timerSeconds:2400, timerRunning:false, leftImg1:'', leftImg2:'', rightImg1:'', rightImg2:'', p1CardImg:'', p2CardImg:'' };
+let timerInterval = null, timerRunning = false, remainingSeconds = 2400, defaultSeconds = 2400;
+
+// ── 서버 통신 ──
+async function push() {
+  state.p1Name = document.getElementById('p1Name').value;
+  state.p2Name = document.getElementById('p2Name').value;
+  state.tournamentName = document.getElementById('tournamentName').value;
+  state.timerSeconds = remainingSeconds;
+  state.timerRunning = timerRunning;
+  document.getElementById('score-p1-label').textContent = state.p1Name || '플레이어 1';
+  document.getElementById('score-p2-label').textContent = state.p2Name || '플레이어 2';
+  // 명함 이미지 state 동기화
+  if (document.getElementById('p1CardImg')) state.p1CardImg = document.getElementById('p1CardImg').value;
+  if (document.getElementById('p2CardImg')) state.p2CardImg = document.getElementById('p2CardImg').value;
+  try {
+    await fetch('/state', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(state) });
+    showStatus('✓ 오버레이 업데이트됨', false);
+  } catch(e) {
+    showStatus('⚠ 서버 연결 실패 — 서버가 켜져 있는지 확인하세요', true);
+  }
+}
+
+async function loadState() {
+  try {
+    const res = await fetch('/state?_=' + Date.now());
+    const s = await res.json();
+    state = { ...state, ...s };
+    setInputValue('p1Name', s.p1Name);
+    setInputValue('p2Name', s.p2Name);
+    setInputValue('tournamentName', s.tournamentName);
+    setInputValue('p1CardImg', s.p1CardImg);
+    setInputValue('p2CardImg', s.p2CardImg);
+    setInputValue('leftImg1', s.leftImg1);
+    setInputValue('leftImg2', s.leftImg2);
+    setInputValue('rightImg1', s.rightImg1);
+    setInputValue('rightImg2', s.rightImg2);
+    setPreview('p1card-preview', 'p1card-ph', s.p1CardImg || '');
+    setPreview('p2card-preview', 'p2card-ph', s.p2CardImg || '');
+    setPreview('lp1-preview', 'lp1-ph', s.leftImg1 || '');
+    setPreview('lp2-preview', 'lp2-ph', s.leftImg2 || '');
+    setPreview('rp1-preview', 'rp1-ph', s.rightImg1 || '');
+    setPreview('rp2-preview', 'rp2-ph', s.rightImg2 || '');
+    document.getElementById('scoreL').textContent = s.scoreLeft ?? 0;
+    document.getElementById('scoreR').textContent = s.scoreRight ?? 0;
+    document.getElementById('score-p1-label').textContent = s.p1Name || '플레이어 1';
+    document.getElementById('score-p2-label').textContent = s.p2Name || '플레이어 2';
+    state.scoreLeft = s.scoreLeft ?? 0;
+    state.scoreRight = s.scoreRight ?? 0;
+    remainingSeconds = s.timerSeconds ?? 2400;
+    stopTimer();
+    if (s.timerRunning) {
+      startLocalTimer();
+      document.getElementById('startStopBtn').textContent='⏸ 일시정지';
+      document.getElementById('startStopBtn').className='btn btn-warning';
+    } else {
+      document.getElementById('startStopBtn').textContent='▶ 시작';
+      document.getElementById('startStopBtn').className='btn btn-success';
+    }
+    updateTimerUI();
+  } catch(e) {}
+}
+
+function setInputValue(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.value = value || '';
+}
+
+function showStatus(msg, isErr) {
+  const el = document.getElementById('status-bar');
+  el.textContent = msg;
+  el.classList.toggle('err', isErr);
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+// ── 이미지 ──
+function triggerFile(id) { document.getElementById(id).click(); }
+async function onFile(input, key, prevId, phId) {
+  const file = input.files[0]; if (!file) return;
+
+  // 미리보기는 blob으로 즉시 표시
+  const blobUrl = URL.createObjectURL(file);
+  setPreview(prevId, phId, blobUrl);
+
+  // 서버에 업로드
+  try {
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+    const res = await fetch('/upload', { method: 'POST', body: formData });
+    const result = await res.json();
+    if (result.ok) {
+      // 서버 경로로 state 저장 (OBS에서 접근 가능한 URL)
+      const serverUrl = 'http://localhost:8000/' + result.path;
+      document.getElementById(key).value = serverUrl;
+      state[key] = serverUrl;
+      push();
+    } else {
+      showStatus('⚠ 이미지 업로드 실패: ' + result.error, true);
+    }
+  } catch(e) {
+    showStatus('⚠ 업로드 오류 — 서버가 켜져 있는지 확인하세요', true);
+  }
+}
+function onPath(key, prevId, phId) {
+  const v = document.getElementById(key).value.trim();
+  setPreview(prevId, phId, v); state[key] = v; push();
+}
+function clearImg(key, prevId, phId) {
+  document.getElementById(key).value = ''; setPreview(prevId, phId, ''); state[key] = ''; push();
+}
+function setPreview(prevId, phId, src) {
+  const img = document.getElementById(prevId), ph = document.getElementById(phId);
+  if (src) { img.src = src; img.classList.add('loaded'); ph.style.display = 'none'; }
+  else { img.src = ''; img.classList.remove('loaded'); ph.style.display = ''; }
+}
+
+// ── 스코어 ──
+function changeScore(side, d) {
+  if (side==='left') { state.scoreLeft = Math.max(0, state.scoreLeft+d); document.getElementById('scoreL').textContent = state.scoreLeft; }
+  else { state.scoreRight = Math.max(0, state.scoreRight+d); document.getElementById('scoreR').textContent = state.scoreRight; }
+  push();
+}
+function resetScore() { state.scoreLeft=0; state.scoreRight=0; document.getElementById('scoreL').textContent=0; document.getElementById('scoreR').textContent=0; push(); }
+
+// ── 타이머 ──
+function updateTimerUI() {
+  const m = Math.floor(Math.abs(remainingSeconds)/60), s = Math.abs(remainingSeconds)%60;
+  const el = document.getElementById('timerDisplay');
+  el.textContent = (remainingSeconds<0?'-':'') + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  el.classList.remove('warning','danger');
+  if (remainingSeconds<=0) el.classList.add('danger');
+  else if (remainingSeconds<=180) el.classList.add('warning');
+}
+function toggleTimer() {
+  if (timerRunning) { stopTimer(); document.getElementById('startStopBtn').textContent='▶ 시작'; document.getElementById('startStopBtn').className='btn btn-success'; }
+  else { startLocalTimer(); document.getElementById('startStopBtn').textContent='⏸ 일시정지'; document.getElementById('startStopBtn').className='btn btn-warning'; }
+  push();
+}
+function startLocalTimer() {
+  if (timerRunning) return; timerRunning = true;
+  timerInterval = setInterval(() => { remainingSeconds--; updateTimerUI(); state.timerSeconds=remainingSeconds; fetch('/state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(state)}).catch(()=>{}); }, 1000);
+}
+function stopTimer() { timerRunning=false; clearInterval(timerInterval); }
+function resetTimer() { stopTimer(); document.getElementById('startStopBtn').textContent='▶ 시작'; document.getElementById('startStopBtn').className='btn btn-success'; remainingSeconds=defaultSeconds; updateTimerUI(); push(); }
+function setTimer(m) { stopTimer(); document.getElementById('startStopBtn').textContent='▶ 시작'; document.getElementById('startStopBtn').className='btn btn-success'; remainingSeconds=m*60; defaultSeconds=remainingSeconds; updateTimerUI(); push(); }
+function setTimerFromInput() { const v=parseInt(document.getElementById('customMin').value); if(!isNaN(v)&&v>0){setTimer(v); document.getElementById('customMin').value='';} }
+
+// ── 초기화 ──
+function resetAll() {
+  if (!confirm('모든 정보를 초기화할까요?')) return;
+  stopTimer(); remainingSeconds=2400; defaultSeconds=2400;
+  state = { p1Name:'', p1Deck:'', p2Name:'', p2Deck:'', tournamentName:'', roundName:'', scoreLeft:0, scoreRight:0, timerSeconds:2400, timerRunning:false, leftImg1:'', leftImg2:'', rightImg1:'', rightImg2:'', p1CardImg:'', p2CardImg:'' };
+  ['p1Name','p2Name','tournamentName','p1CardImg','p2CardImg','leftImg1','leftImg2','rightImg1','rightImg2'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  ['lp1-preview','lp2-preview','rp1-preview','rp2-preview','p1card-preview','p2card-preview'].forEach((p,i) => { const phs=['lp1-ph','lp2-ph','rp1-ph','rp2-ph','p1card-ph','p2card-ph']; setPreview(p,phs[i],''); });
+  document.getElementById('scoreL').textContent=0; document.getElementById('scoreR').textContent=0;
+  document.getElementById('startStopBtn').textContent='▶ 시작'; document.getElementById('startStopBtn').className='btn btn-success';
+  updateTimerUI(); push();
+}
+
+loadState();
+updateTimerUI();
+</script>
+</body>
+</html>

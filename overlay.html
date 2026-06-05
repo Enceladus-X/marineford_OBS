@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920">
+<title>Marinford Overlay</title>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; font-family: 'Noto Sans KR', sans-serif; }
+
+  /* ══════════════════════════════
+     상단 바
+  ══════════════════════════════ */
+  #top-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 100px;
+    display: flex;
+    align-items: stretch;
+  }
+
+  /* 플레이어 블록 */
+  .player-block {
+    width: 560px;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    background: #000;
+    border-bottom: 3px solid #c9a84c;
+    overflow: hidden;
+  }
+  .player-block.right { margin-left: auto; flex-direction: row-reverse; }
+
+  /* 명함 이미지 구역 — 상단바 아래로 약 2/3 노출 */
+  .player-block { overflow: visible; z-index: 10; }
+  .player-card-img {
+    width: 260px;
+    height: 100px;        /* 상단바 높이와 동일 */
+    flex-shrink: 0;
+    overflow: hidden;
+    background: transparent;
+    align-self: flex-start;
+    position: relative;
+    z-index: 10;
+  }
+  .player-card-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    display: block;
+  }
+  .player-card-img.empty { background: transparent; }
+
+  /* 닉네임 구역 */
+  .player-info {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding: 0 22px;
+  }
+  .player-block.right .player-info { justify-content: flex-end; }
+
+  .player-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 58px;
+    color: #fff;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  /* 중앙 타이머 블록 */
+  #center-top {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+    border-bottom: 3px solid #c9a84c;
+  }
+  #timer-display {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 62px;
+    color: #fff;
+    line-height: 1;
+    letter-spacing: 0.06em;
+    transition: color 0.5s;
+  }
+  #timer-display.warning { color: #ff9900; }
+  #timer-display.danger  { color: #ff3333; animation: pulse 0.8s infinite; }
+
+  /* ══════════════════════════════
+     사이드 이미지 패널
+  ══════════════════════════════ */
+  .side-panel {
+    position: absolute;
+    top: 100px;
+    bottom: 90px;
+    width: 240px;
+    background: #000;
+    overflow: hidden;
+  }
+  .side-panel.left  { left: 0; }
+  .side-panel.right { right: 0; }
+
+  /* 상단 슬롯: 꽉 채우기 (object-fit: cover) */
+  .img-slot {
+    position: absolute;
+    left: 0; right: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .img-slot img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+  }
+  .img-slot.hidden { display: none; }
+
+  /* 슬롯 1 단독: 전체 채움 */
+  .slot-single { top: 0; bottom: 0; }
+
+  /* 슬롯 1+2 분할 — 상단은 cover, 하단은 contain 유지 */
+  .slot-top    { top: 0; height: calc(50% - 4px); }
+  .slot-bottom {
+    bottom: 0;
+    height: calc(50% - 4px);
+    background: #000;
+  }
+  .slot-bottom img { object-fit: contain; }
+
+  /* ══════════════════════════════
+     하단 바
+  ══════════════════════════════ */
+  #bottom-bar {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 90px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* 스코어 + 대회명 행 */
+  #score-info-row {
+    height: 90px;
+    background: #000;
+    border-top: 3px solid #c9a84c;
+    display: flex;
+    align-items: center;
+  }
+
+  /* 좌측 대회명 */
+  #tournament-block {
+    width: 560px;
+    padding: 0 28px;
+    display: flex;
+    align-items: center;
+  }
+  #tournament-name {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 32px;
+    color: #fff;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  /* 가운데 스코어 */
+  #score-block {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+  }
+  .score-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 62px;
+    color: #fff;
+    line-height: 1;
+    min-width: 44px;
+    text-align: center;
+  }
+  .score-sep {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 46px;
+    color: #c9a84c;
+    margin: 0 10px;
+    line-height: 1;
+  }
+
+  /* 우측 여백 (대칭) */
+  #score-right-pad { width: 560px; }
+
+
+
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+</style>
+</head>
+<body>
+
+<!-- 상단 바 -->
+<div id="top-bar">
+  <!-- 플레이어 1 (좌) -->
+  <div class="player-block left">
+    <div class="player-card-img empty" id="p1-card-wrap">
+      <img id="p1-card-img" src="" alt="" style="display:none;">
+    </div>
+    <div class="player-info">
+      <div class="player-name" id="p1-name"></div>
+    </div>
+  </div>
+
+  <!-- 중앙 타이머 -->
+  <div id="center-top">
+    <div id="timer-display">40:00</div>
+  </div>
+
+  <!-- 플레이어 2 (우) -->
+  <div class="player-block right">
+    <div class="player-card-img empty" id="p2-card-wrap">
+      <img id="p2-card-img" src="" alt="" style="display:none;">
+    </div>
+    <div class="player-info">
+      <div class="player-name" id="p2-name"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 좌측 사이드 패널 -->
+<div class="side-panel left">
+  <div class="img-slot slot-single hidden" id="left-img-1-single"><img id="left-img-1" src="" alt=""></div>
+  <div class="img-slot slot-top hidden"    id="left-img-1-top"><img id="left-img-1b" src="" alt=""></div>
+  <div class="img-slot slot-bottom hidden" id="left-img-2"><img id="left-img-2-el" src="" alt=""></div>
+</div>
+
+<!-- 우측 사이드 패널 -->
+<div class="side-panel right">
+  <div class="img-slot slot-single hidden" id="right-img-1-single"><img id="right-img-1" src="" alt=""></div>
+  <div class="img-slot slot-top hidden"    id="right-img-1-top"><img id="right-img-1b" src="" alt=""></div>
+  <div class="img-slot slot-bottom hidden" id="right-img-2"><img id="right-img-2-el" src="" alt=""></div>
+</div>
+
+<!-- 하단 바 -->
+<div id="bottom-bar">
+  <div id="score-info-row">
+    <!-- 좌측 대회명 -->
+    <div id="tournament-block">
+      <div id="tournament-name"></div>
+    </div>
+    <!-- 가운데 스코어 -->
+    <div id="score-block">
+      <div class="score-num" id="score-left">0</div>
+      <div class="score-sep">:</div>
+      <div class="score-num" id="score-right">0</div>
+    </div>
+    <!-- 우측 여백 -->
+    <div id="score-right-pad"></div>
+  </div>
+<div class="logo-slot empty" id="logo-slot-2"></div>
+    <div class="logo-slot empty" id="logo-slot-3"></div>
+    <div class="logo-slot empty" id="logo-slot-4"></div>
+    <div class="logo-slot empty" id="logo-slot-5"></div>
+  </div>
+</div>
+
+<script>
+let remainingSeconds = 2400;
+let timerRunning = false;
+let timerInterval = null;
+let lastState = null;
+
+function applyState(s) {
+  if (!s) return;
+  document.getElementById('p1-name').textContent = s.p1Name || '';
+  document.getElementById('p2-name').textContent = s.p2Name || '';
+  document.getElementById('tournament-name').textContent = s.tournamentName || '';
+  document.getElementById('score-left').textContent  = s.scoreLeft  ?? 0;
+  document.getElementById('score-right').textContent = s.scoreRight ?? 0;
+
+  // 명함 이미지
+  setCardImg('p1-card-img', 'p1-card-wrap', s.p1CardImg || '');
+  setCardImg('p2-card-img', 'p2-card-wrap', s.p2CardImg || '');
+
+  if (s.timerSeconds !== undefined) { remainingSeconds = s.timerSeconds; updateTimerDisplay(); }
+  if (s.timerRunning !== undefined) {
+    if (s.timerRunning && !timerRunning) startTimer();
+    else if (!s.timerRunning && timerRunning) stopTimer();
+  }
+  applyImages(s);
+}
+
+function setCardImg(imgId, wrapId, src) {
+  const img  = document.getElementById(imgId);
+  const wrap = document.getElementById(wrapId);
+  if (src) { img.src = src; img.style.display = 'block'; wrap.classList.remove('empty'); }
+  else      { img.src = ''; img.style.display = 'none';  wrap.classList.add('empty'); }
+}
+
+function applyImages(s) {
+  const l1 = s.leftImg1 || '', l2 = s.leftImg2 || '';
+  const r1 = s.rightImg1 || '', r2 = s.rightImg2 || '';
+  document.getElementById('left-img-1-single').classList.toggle('hidden', !(l1 && !l2));
+  document.getElementById('left-img-1').src = l1;
+  document.getElementById('left-img-1-top').classList.toggle('hidden', !(l1 && l2));
+  document.getElementById('left-img-1b').src = l1;
+  document.getElementById('left-img-2').classList.toggle('hidden', !l2);
+  document.getElementById('left-img-2-el').src = l2;
+  document.getElementById('right-img-1-single').classList.toggle('hidden', !(r1 && !r2));
+  document.getElementById('right-img-1').src = r1;
+  document.getElementById('right-img-1-top').classList.toggle('hidden', !(r1 && r2));
+  document.getElementById('right-img-1b').src = r1;
+  document.getElementById('right-img-2').classList.toggle('hidden', !r2);
+  document.getElementById('right-img-2-el').src = r2;
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(Math.abs(remainingSeconds) / 60);
+  const s = Math.abs(remainingSeconds) % 60;
+  const sign = remainingSeconds < 0 ? '-' : '';
+  document.getElementById('timer-display').textContent = sign + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  const el = document.getElementById('timer-display');
+  el.classList.remove('warning','danger');
+  if (remainingSeconds <= 0) el.classList.add('danger');
+  else if (remainingSeconds <= 180) el.classList.add('warning');
+}
+
+function startTimer() {
+  if (timerRunning) return; timerRunning = true;
+  timerInterval = setInterval(() => { remainingSeconds--; updateTimerDisplay(); }, 1000);
+}
+function stopTimer() { timerRunning = false; clearInterval(timerInterval); }
+
+async function poll() {
+  try {
+    const res = await fetch('/state?_=' + Date.now());
+    const s = await res.json();
+    const str = JSON.stringify(s);
+    if (str !== lastState) { lastState = str; applyState(s); }
+  } catch(e) {}
+}
+poll();
+setInterval(poll, 500);
+</script>
+</body>
+</html>
