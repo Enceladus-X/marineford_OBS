@@ -2,292 +2,291 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>Marinford 방송 컨트롤</title>
-<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Marineford 송출 패널</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@500;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
 <style>
-  :root { --gold:#c9a84c; --gold-light:#e8c96a; --bg:#0d0d18; --surface:#14141f; --surface2:#1c1c2e; --border:rgba(201,168,76,0.25); --text:#f0f0f0; --text-dim:rgba(240,240,240,0.5); --danger:#e03a3a; --success:#3aae6e; --warning:#e07b3a; }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { background:var(--bg); color:var(--text); font-family:'Noto Sans KR',sans-serif; min-height:100vh; padding:24px; }
-  h1 { font-family:'Bebas Neue',sans-serif; font-size:28px; color:var(--gold); letter-spacing:0.12em; display:flex; align-items:center; gap:12px; margin-bottom:24px; }
-  h1 svg { width:32px; height:32px; }
-  .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; max-width:960px; margin:0 auto; }
-  .card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:20px; }
+  :root { --bg:#0b0c12; --surface:#141721; --surface2:#1d2230; --line:rgba(201,168,76,.24); --gold:#c9a84c; --gold2:#efd36d; --text:#f4f1e8; --muted:rgba(244,241,232,.58); --red:#c93f46; --blue:#326bd4; --green:#2f9d69; --orange:#c96f2d; }
+  * { box-sizing:border-box; }
+  body { margin:0; min-height:100vh; background:var(--bg); color:var(--text); font-family:'Noto Sans KR',sans-serif; padding:24px; }
+  .wrap { width:min(1120px,100%); margin:0 auto; }
+  header { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:18px; }
+  h1 { margin:0; font-family:'Bebas Neue',sans-serif; color:var(--gold2); font-size:38px; letter-spacing:.08em; line-height:1; }
+  .sub { color:var(--muted); font-size:13px; font-weight:800; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .card { background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:18px; }
   .card.full { grid-column:1/-1; }
-  .card-title { font-family:'Black Han Sans',sans-serif; font-size:13px; color:var(--gold); letter-spacing:0.12em; text-transform:uppercase; margin-bottom:16px; padding-bottom:10px; border-bottom:1px solid var(--border); }
-  label { display:block; font-size:11px; color:var(--text-dim); letter-spacing:0.08em; margin-bottom:5px; margin-top:12px; }
-  label:first-of-type { margin-top:0; }
-  input[type="text"], input[type="number"] { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-family:'Noto Sans KR',sans-serif; font-size:14px; padding:9px 12px; outline:none; transition:border-color 0.2s; }
-  input:focus { border-color:var(--gold); }
-  input[type="file"] { display:none; }
-
-  .img-slot-ctrl { margin-top:14px; }
-  .img-slot-ctrl + .img-slot-ctrl { margin-top:16px; padding-top:14px; border-top:1px solid var(--border); }
-  .img-slot-label { font-size:11px; color:var(--text-dim); letter-spacing:0.08em; margin-bottom:6px; }
-  .img-preview-wrap { width:100%; height:100px; background:var(--surface2); border:1px dashed var(--border); border-radius:6px; display:flex; align-items:center; justify-content:center; overflow:hidden; margin-bottom:8px; cursor:pointer; }
-  .img-preview-wrap img { max-width:100%; max-height:100%; object-fit:contain; display:none; }
-  .img-preview-wrap img.loaded { display:block; }
-  .img-placeholder { font-size:11px; color:var(--text-dim); text-align:center; pointer-events:none; }
-  .img-input-row { display:flex; gap:8px; align-items:center; }
-  .img-input-row input { flex:1; font-size:12px; }
-  .img-clear-btn { padding:8px 12px; border-radius:6px; background:var(--surface2); border:1px solid var(--border); color:var(--text-dim); font-size:12px; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
-  .img-clear-btn:hover { border-color:var(--danger); color:var(--danger); }
-
-  .score-val { font-family:'Bebas Neue',sans-serif; font-size:52px; color:#fff; min-width:48px; text-align:center; line-height:1; }
-  .score-sep-display { font-family:'Bebas Neue',sans-serif; font-size:36px; color:var(--gold); }
-  .score-player-label { font-size:11px; color:var(--text-dim); text-align:center; margin-bottom:6px; letter-spacing:0.05em; }
-  .score-col { text-align:center; }
-  .btn-row { display:flex; gap:8px; justify-content:center; margin-top:4px; }
-
-  .btn { padding:9px 18px; border-radius:6px; border:none; font-family:'Noto Sans KR',sans-serif; font-size:13px; font-weight:700; cursor:pointer; transition:all 0.15s; letter-spacing:0.03em; }
-  .btn:active { transform:scale(0.96); }
-  .btn-gold { background:var(--gold); color:#1a1200; }
-  .btn-gold:hover { background:var(--gold-light); }
-  .btn-outline { background:transparent; border:1px solid var(--border); color:var(--text-dim); }
-  .btn-outline:hover { border-color:var(--gold); color:var(--text); }
-  .btn-danger { background:var(--danger); color:#fff; }
-  .btn-danger:hover { background:#f04545; }
-  .btn-success { background:var(--success); color:#fff; font-size:15px; padding:11px 28px; }
-  .btn-success:hover { background:#45c07f; }
-  .btn-warning { background:var(--warning); color:#fff; font-size:15px; padding:11px 28px; }
-  .btn-sm { padding:6px 14px; font-size:20px; min-width:44px; border-radius:6px; background:var(--surface2); border:1px solid var(--border); color:var(--text); font-weight:900; cursor:pointer; }
-  .btn-sm:hover { border-color:var(--gold); color:var(--gold); }
-
-  .timer-display-big { font-family:'Bebas Neue',sans-serif; font-size:72px; text-align:center; color:#fff; letter-spacing:0.06em; line-height:1; margin:8px 0 4px; transition:color 0.3s; }
-  .timer-display-big.warning { color:var(--warning); }
-  .timer-display-big.danger { color:var(--danger); animation:pulse 0.8s infinite; }
-  .timer-btn-row { display:flex; gap:10px; justify-content:center; margin-top:14px; flex-wrap:wrap; }
-  .timer-preset-row { display:flex; gap:8px; justify-content:center; margin-top:10px; flex-wrap:wrap; }
-  .btn-preset { padding:6px 14px; border-radius:6px; background:var(--surface2); border:1px solid var(--border); color:var(--text-dim); font-family:'Noto Sans KR',sans-serif; font-size:12px; cursor:pointer; transition:all 0.15s; }
-  .btn-preset:hover { border-color:var(--gold); color:var(--gold); }
-
-  #status-bar { text-align:center; font-size:12px; color:var(--success); margin-top:16px; height:16px; letter-spacing:0.05em; opacity:0; transition:opacity 0.3s; }
-  #status-bar.show { opacity:1; }
-  #status-bar.err { color:var(--danger); }
-  .apply-bar { display:flex; gap:12px; align-items:center; justify-content:flex-end; margin-bottom:16px; max-width:960px; margin-left:auto; margin-right:auto; }
-  .divider { height:1px; background:var(--border); margin:14px 0; }
-  .score-reset-row { display:flex; justify-content:center; margin-top:14px; }
-  .tablet-connect { display:grid; grid-template-columns:220px 1fr; gap:18px; align-items:center; }
-  .tablet-qr-wrap { background:#fff; border-radius:8px; padding:12px; display:grid; place-items:center; min-height:220px; }
-  .tablet-qr-wrap img { width:100%; max-width:196px; aspect-ratio:1; display:block; }
-  .tablet-url { background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:12px; color:var(--text); font-size:18px; font-weight:900; overflow-wrap:anywhere; }
-  .tablet-connect-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
-  .tablet-connect-help { margin-top:10px; color:var(--text-dim); font-size:12px; line-height:1.55; }
-  @media (max-width:720px) {
-    .tablet-connect { grid-template-columns:1fr; }
+  .card-title { color:var(--gold2); font-size:13px; font-weight:900; letter-spacing:.08em; margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--line); }
+  label { display:block; color:var(--muted); font-size:12px; font-weight:900; margin:12px 0 6px; }
+  input, select { width:100%; height:42px; border-radius:6px; border:1px solid var(--line); background:var(--surface2); color:var(--text); padding:0 12px; font:inherit; font-weight:800; outline:none; }
+  input:focus, select:focus { border-color:var(--gold); }
+  input[type=file] { display:none; }
+  button { min-height:40px; border:0; border-radius:6px; padding:0 14px; color:#fff; font:inherit; font-size:13px; font-weight:900; cursor:pointer; white-space:nowrap; }
+  button:active { transform:translateY(1px); }
+  button:disabled { opacity:.45; cursor:not-allowed; transform:none; }
+  .btn-gold { background:var(--gold); color:#171100; }
+  .btn-outline { background:transparent; border:1px solid var(--line); color:var(--muted); }
+  .btn-red { background:var(--red); }
+  .btn-blue { background:var(--blue); }
+  .btn-green { background:var(--green); }
+  .btn-orange { background:var(--orange); }
+  .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .row > * { flex:1; }
+  .row button { flex:0 0 auto; }
+  .url-box { background:var(--surface2); border:1px solid var(--line); border-radius:6px; padding:12px; font-size:17px; font-weight:900; overflow-wrap:anywhere; }
+  .help { color:var(--muted); font-size:12px; line-height:1.55; margin-top:8px; }
+  .tablet-connect { display:grid; grid-template-columns:220px 1fr; gap:16px; align-items:center; }
+  .qr-wrap { background:#fff; border-radius:8px; padding:12px; min-height:220px; display:grid; place-items:center; border:2px solid rgba(201,168,76,.55); }
+  .qr-inline { width:196px; height:196px; display:grid; place-items:center; }
+  .qr-inline svg { width:196px; height:196px; display:block; }
+  .qr-wrap img { width:196px; height:196px; display:none; }
+  .qr-wrap.use-img img { display:block; }
+  .qr-wrap.use-img .qr-inline { display:none; }
+  .score-board { display:grid; grid-template-columns:1fr auto 1fr; gap:12px; align-items:end; text-align:center; }
+  .score-name { color:var(--muted); font-size:12px; font-weight:900; margin-bottom:4px; }
+  .score-val { font-family:'Bebas Neue',sans-serif; font-size:64px; line-height:.9; }
+  .colon { font-family:'Bebas Neue',sans-serif; color:var(--gold); font-size:44px; padding-bottom:10px; }
+  .timer-big { font-family:'Bebas Neue',sans-serif; font-size:78px; line-height:.9; text-align:center; letter-spacing:0; }
+  .timer-big.warning { color:#ffbc73; }
+  .timer-big.danger { color:#ff7078; }
+  .image-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .preview { height:88px; border:1px dashed var(--line); border-radius:6px; background:var(--surface2); display:grid; place-items:center; overflow:hidden; color:var(--muted); font-size:12px; font-weight:800; cursor:pointer; }
+  .preview img { max-width:100%; max-height:100%; object-fit:contain; display:none; }
+  .preview img.loaded { display:block; }
+  .status { height:22px; margin-top:12px; color:#8be0af; text-align:center; font-size:12px; font-weight:900; opacity:0; transition:opacity .2s; }
+  .status.show { opacity:1; }
+  .status.err { color:#ff9299; }
+  @media (max-width:820px) {
+    body { padding:14px; }
+    header, .tablet-connect { grid-template-columns:1fr; display:grid; }
+    .grid, .image-grid { grid-template-columns:1fr; }
   }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.45} }
 </style>
 </head>
 <body>
-<div style="max-width:960px;margin:0 auto;">
-  <h1>
-    <svg viewBox="0 0 32 32" fill="none">
-      <path d="M16 1 L30 7 L30 18 C30 25 16 31 16 31 C16 31 2 25 2 18 L2 7 Z" stroke="#c9a84c" stroke-width="2" fill="rgba(201,168,76,0.1)"/>
-      <text x="16" y="22" text-anchor="middle" font-family="Bebas Neue,sans-serif" font-size="13" fill="#c9a84c">M</text>
-    </svg>
-    MARINFORD 방송 컨트롤
-  </h1>
-
-  <div class="apply-bar">
-    <span style="font-size:12px;color:var(--text-dim);">모든 변경사항은 즉시 오버레이에 반영됩니다</span>
-    <button class="btn btn-danger" onclick="resetAll()">전체 초기화</button>
-  </div>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>MARINEFORD CONTROL</h1>
+      <div class="sub">송출 패널에서 OBS 연결, 태블릿 연결, 룰 프리셋, 이미지 프리셋을 관리합니다.</div>
+    </div>
+    <button class="btn-red" onclick="resetAll()">전체 초기화</button>
+  </header>
 
   <div class="grid">
+    <section class="card full">
+      <div class="card-title">OBS 화면 연결</div>
+      <label>OBS 브라우저 소스 URL</label>
+      <div class="url-box" id="obsUrlText">http://127.0.0.1:8000/overlay.html</div>
+      <div class="row" style="margin-top:10px;">
+        <button class="btn-gold" onclick="copyObsUrl()">URL 복사</button>
+        <button class="btn-outline" onclick="openOverlayPreview()">미리보기 열기</button>
+      </div>
+      <div class="help">OBS에서 소스 추가 → 브라우저를 선택하고 위 URL을 입력하세요. 권장 크기는 1920 x 1080입니다.</div>
+    </section>
 
-    <div class="card full">
-      <div class="card-title">📋 대회 정보</div>
-      <label>대회명</label>
-      <input type="text" id="tournamentName" oninput="push()">
-    </div>
-
-    <div class="card full">
-      <div class="card-title">📱 태블릿 연결</div>
+    <section class="card full">
+      <div class="card-title">태블릿 연결</div>
       <div class="tablet-connect">
-        <div class="tablet-qr-wrap">
+        <div class="qr-wrap" id="tabletQrWrap">
+          <div class="qr-inline" id="tabletQrInline">QR 준비 중</div>
           <img id="tabletQr" alt="태블릿 연결 QR">
         </div>
         <div>
           <label>태블릿에서 열 주소</label>
-          <div class="tablet-url" id="tabletUrlText">주소 확인 중...</div>
-          <div class="tablet-connect-actions">
-            <button class="btn btn-gold" type="button" onclick="loadTabletConnection()">QR 새로고침</button>
-            <button class="btn btn-outline" type="button" onclick="openTabletPanel()">태블릿 패널 열기</button>
+          <div class="url-box" id="tabletUrlText">주소 확인 중...</div>
+          <div class="row" style="margin-top:10px;">
+            <button class="btn-gold" onclick="loadTabletConnection()">QR 새로고침</button>
+            <button class="btn-outline" onclick="openTabletPanel()">태블릿 패널 열기</button>
           </div>
-          <div class="tablet-connect-help" id="tabletConnectStatus">
-            태블릿과 송출컴을 같은 Wi-Fi 또는 같은 공유기에 연결한 뒤 QR을 스캔하세요.
-          </div>
+          <div class="help" id="tabletConnectStatus">송출컴과 태블릿을 같은 Wi-Fi 또는 같은 공유기에 연결한 뒤 QR을 스캔하세요.</div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <div class="card">
-      <div class="card-title">🔵 플레이어 1 (좌측)</div>
-      <label>닉네임</label><input type="text" id="p1Name" oninput="push()">
-      <label>덱 이름</label><input type="text" id="p1Deck" list="deckPresetList" oninput="push()" onchange="applyDeckPreset('left')">
-      <div class="img-slot-ctrl" style="margin-top:14px;">
-        <div class="img-slot-label">명함 이미지</div>
-        <div class="img-preview-wrap" style="height:70px;" onclick="triggerFile('p1card-file')">
-          <img id="p1card-preview" src="" alt=""><div class="img-placeholder" id="p1card-ph">클릭하여 선택</div>
+    <section class="card full">
+      <div class="card-title">대회 및 룰 설정</div>
+      <label>대회명</label>
+      <input type="text" id="tournamentName" oninput="push()">
+      <div class="row">
+        <div>
+          <label>룰 프리셋 이름</label>
+          <input type="text" id="rulePresetName" list="rulePresetList" placeholder="예: 유희왕 BO3" onchange="applyRulePreset()">
         </div>
-        <div class="img-input-row">
-          <input type="text" id="p1CardImg" placeholder="경로 또는 URL" oninput="onPath('p1CardImg','p1card-preview','p1card-ph')">
-          <button class="img-clear-btn" onclick="clearImg('p1CardImg','p1card-preview','p1card-ph')">삭제</button>
+        <div>
+          <label>매치 방식</label>
+          <select id="matchTarget" onchange="push()">
+            <option value="2">BO3</option>
+            <option value="1">BO1</option>
+          </select>
         </div>
-        <input type="file" id="p1card-file" accept="image/*" onchange="onFile(this,'p1CardImg','p1card-preview','p1card-ph')">
       </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">🔴 플레이어 2 (우측)</div>
-      <label>닉네임</label><input type="text" id="p2Name" oninput="push()">
-      <label>덱 이름</label><input type="text" id="p2Deck" list="deckPresetList" oninput="push()" onchange="applyDeckPreset('right')">
-      <div class="img-slot-ctrl" style="margin-top:14px;">
-        <div class="img-slot-label">명함 이미지</div>
-        <div class="img-preview-wrap" style="height:70px;" onclick="triggerFile('p2card-file')">
-          <img id="p2card-preview" src="" alt=""><div class="img-placeholder" id="p2card-ph">클릭하여 선택</div>
+      <div class="row">
+        <div>
+          <label>기본 타이머(분)</label>
+          <input type="number" id="mainTimerMinutes" min="1" max="180" value="40" onchange="applyRuleInputs()">
         </div>
-        <div class="img-input-row">
-          <input type="text" id="p2CardImg" placeholder="경로 또는 URL" oninput="onPath('p2CardImg','p2card-preview','p2card-ph')">
-          <button class="img-clear-btn" onclick="clearImg('p2CardImg','p2card-preview','p2card-ph')">삭제</button>
+        <div>
+          <label>엑스트라 턴 시간(분)</label>
+          <input type="number" id="extraTurnMinutes" min="0" max="60" value="15" onchange="applyRuleInputs()">
         </div>
-        <input type="file" id="p2card-file" accept="image/*" onchange="onFile(this,'p2CardImg','p2card-preview','p2card-ph')">
+        <button class="btn-gold" style="align-self:end;" onclick="saveRulePreset()">룰 프리셋 저장</button>
       </div>
-    </div>
+      <div class="help">프리셋은 게임별 룰 차이를 저장합니다. 기본값은 BO3, 기본 타이머 40분, 엑스트라 턴 15분입니다.</div>
+    </section>
 
-    <div class="card">
-      <div class="card-title">🖼 좌측 이미지 패널</div>
-      <div class="img-slot-ctrl">
-        <div class="img-slot-label">슬롯 1</div>
-        <div class="img-preview-wrap" onclick="triggerFile('lp1-file')">
-          <img id="lp1-preview" src="" alt=""><div class="img-placeholder" id="lp1-ph">클릭하여 이미지 선택</div>
-        </div>
-        <div class="img-input-row">
+    <section class="card">
+      <div class="card-title">플레이어 1</div>
+      <label>닉네임</label>
+      <input type="text" id="p1Name" oninput="push()">
+      <label>덱 이름</label>
+      <input type="text" id="p1Deck" list="deckPresetList" oninput="push()" onchange="applyDeckPreset('left')">
+      <label>명함 이미지</label>
+      <div class="preview" onclick="triggerFile('p1card-file')"><img id="p1card-preview" alt=""><span id="p1card-ph">이미지 선택</span></div>
+      <div class="row" style="margin-top:8px;"><input type="text" id="p1CardImg" placeholder="경로 또는 URL" oninput="onPath('p1CardImg','p1card-preview','p1card-ph')"><button class="btn-outline" onclick="clearImg('p1CardImg','p1card-preview','p1card-ph')">삭제</button></div>
+      <input type="file" id="p1card-file" accept="image/*" onchange="onFile(this,'p1CardImg','p1card-preview','p1card-ph')">
+    </section>
+
+    <section class="card">
+      <div class="card-title">플레이어 2</div>
+      <label>닉네임</label>
+      <input type="text" id="p2Name" oninput="push()">
+      <label>덱 이름</label>
+      <input type="text" id="p2Deck" list="deckPresetList" oninput="push()" onchange="applyDeckPreset('right')">
+      <label>명함 이미지</label>
+      <div class="preview" onclick="triggerFile('p2card-file')"><img id="p2card-preview" alt=""><span id="p2card-ph">이미지 선택</span></div>
+      <div class="row" style="margin-top:8px;"><input type="text" id="p2CardImg" placeholder="경로 또는 URL" oninput="onPath('p2CardImg','p2card-preview','p2card-ph')"><button class="btn-outline" onclick="clearImg('p2CardImg','p2card-preview','p2card-ph')">삭제</button></div>
+      <input type="file" id="p2card-file" accept="image/*" onchange="onFile(this,'p2CardImg','p2card-preview','p2card-ph')">
+    </section>
+
+    <section class="card">
+      <div class="card-title">좌측 덱 이미지</div>
+      <div class="image-grid">
+        <div>
+          <label>이미지 1</label>
+          <div class="preview" onclick="triggerFile('lp1-file')"><img id="lp1-preview" alt=""><span id="lp1-ph">이미지 선택</span></div>
           <input type="text" id="leftImg1" placeholder="경로 또는 URL" oninput="onPath('leftImg1','lp1-preview','lp1-ph')">
-          <button class="img-clear-btn" onclick="clearImg('leftImg1','lp1-preview','lp1-ph')">삭제</button>
+          <input type="file" id="lp1-file" accept="image/*" onchange="onFile(this,'leftImg1','lp1-preview','lp1-ph')">
         </div>
-        <input type="file" id="lp1-file" accept="image/*" onchange="onFile(this,'leftImg1','lp1-preview','lp1-ph')">
-      </div>
-      <div class="img-slot-ctrl">
-        <div class="img-slot-label">슬롯 2 (하단)</div>
-        <div class="img-preview-wrap" onclick="triggerFile('lp2-file')">
-          <img id="lp2-preview" src="" alt=""><div class="img-placeholder" id="lp2-ph">클릭하여 이미지 선택</div>
-        </div>
-        <div class="img-input-row">
+        <div>
+          <label>이미지 2</label>
+          <div class="preview" onclick="triggerFile('lp2-file')"><img id="lp2-preview" alt=""><span id="lp2-ph">이미지 선택</span></div>
           <input type="text" id="leftImg2" placeholder="경로 또는 URL" oninput="onPath('leftImg2','lp2-preview','lp2-ph')">
-          <button class="img-clear-btn" onclick="clearImg('leftImg2','lp2-preview','lp2-ph')">삭제</button>
+          <input type="file" id="lp2-file" accept="image/*" onchange="onFile(this,'leftImg2','lp2-preview','lp2-ph')">
         </div>
-        <input type="file" id="lp2-file" accept="image/*" onchange="onFile(this,'leftImg2','lp2-preview','lp2-ph')">
       </div>
-      <div class="score-reset-row"><button class="btn btn-outline" onclick="saveDeckPreset('left')">좌측 덱 프리셋 저장</button></div>
-    </div>
+      <button class="btn-outline" style="margin-top:12px;" onclick="saveDeckPreset('left')">좌측 덱 프리셋 저장</button>
+    </section>
 
-    <div class="card">
-      <div class="card-title">🖼 우측 이미지 패널</div>
-      <div class="img-slot-ctrl">
-        <div class="img-slot-label">슬롯 1</div>
-        <div class="img-preview-wrap" onclick="triggerFile('rp1-file')">
-          <img id="rp1-preview" src="" alt=""><div class="img-placeholder" id="rp1-ph">클릭하여 이미지 선택</div>
-        </div>
-        <div class="img-input-row">
+    <section class="card">
+      <div class="card-title">우측 덱 이미지</div>
+      <div class="image-grid">
+        <div>
+          <label>이미지 1</label>
+          <div class="preview" onclick="triggerFile('rp1-file')"><img id="rp1-preview" alt=""><span id="rp1-ph">이미지 선택</span></div>
           <input type="text" id="rightImg1" placeholder="경로 또는 URL" oninput="onPath('rightImg1','rp1-preview','rp1-ph')">
-          <button class="img-clear-btn" onclick="clearImg('rightImg1','rp1-preview','rp1-ph')">삭제</button>
+          <input type="file" id="rp1-file" accept="image/*" onchange="onFile(this,'rightImg1','rp1-preview','rp1-ph')">
         </div>
-        <input type="file" id="rp1-file" accept="image/*" onchange="onFile(this,'rightImg1','rp1-preview','rp1-ph')">
-      </div>
-      <div class="img-slot-ctrl">
-        <div class="img-slot-label">슬롯 2 (하단)</div>
-        <div class="img-preview-wrap" onclick="triggerFile('rp2-file')">
-          <img id="rp2-preview" src="" alt=""><div class="img-placeholder" id="rp2-ph">클릭하여 이미지 선택</div>
-        </div>
-        <div class="img-input-row">
+        <div>
+          <label>이미지 2</label>
+          <div class="preview" onclick="triggerFile('rp2-file')"><img id="rp2-preview" alt=""><span id="rp2-ph">이미지 선택</span></div>
           <input type="text" id="rightImg2" placeholder="경로 또는 URL" oninput="onPath('rightImg2','rp2-preview','rp2-ph')">
-          <button class="img-clear-btn" onclick="clearImg('rightImg2','rp2-preview','rp2-ph')">삭제</button>
-        </div>
-        <input type="file" id="rp2-file" accept="image/*" onchange="onFile(this,'rightImg2','rp2-preview','rp2-ph')">
-      </div>
-      <div class="score-reset-row"><button class="btn btn-outline" onclick="saveDeckPreset('right')">우측 덱 프리셋 저장</button></div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">🏆 스코어</div>
-      <div style="display:flex;gap:16px;justify-content:center;align-items:flex-end;">
-        <div class="score-col">
-          <div class="score-player-label" id="score-p1-label">플레이어 1</div>
-          <div class="btn-row">
-            <button class="btn-sm" onclick="changeScore('left',-1)">−</button>
-            <div class="score-val" id="scoreL">0</div>
-            <button class="btn-sm" onclick="changeScore('left',+1)">+</button>
-          </div>
-        </div>
-        <div class="score-sep-display" style="margin-bottom:14px;">:</div>
-        <div class="score-col">
-          <div class="score-player-label" id="score-p2-label">플레이어 2</div>
-          <div class="btn-row">
-            <button class="btn-sm" onclick="changeScore('right',-1)">−</button>
-            <div class="score-val" id="scoreR">0</div>
-            <button class="btn-sm" onclick="changeScore('right',+1)">+</button>
-          </div>
+          <input type="file" id="rp2-file" accept="image/*" onchange="onFile(this,'rightImg2','rp2-preview','rp2-ph')">
         </div>
       </div>
-      <div class="score-reset-row"><button class="btn btn-outline" onclick="resetScore()">스코어 초기화</button></div>
-    </div>
+      <button class="btn-outline" style="margin-top:12px;" onclick="saveDeckPreset('right')">우측 덱 프리셋 저장</button>
+    </section>
 
-    <div class="card">
-      <div class="card-title">⏱ 타이머</div>
-      <div class="timer-display-big" id="timerDisplay">40:00</div>
-      <div class="timer-btn-row">
-        <button class="btn btn-success" id="startStopBtn" onclick="toggleTimer()">▶ 시작</button>
-        <button class="btn btn-outline" onclick="resetTimer()">↺ 리셋</button>
+    <section class="card">
+      <div class="card-title">수동 점수 조절</div>
+      <div class="score-board">
+        <div><div class="score-name" id="score-p1-label">플레이어 1</div><div class="row"><button class="btn-outline" onclick="changeScore('left',-1)">-</button><div class="score-val" id="scoreL">0</div><button class="btn-outline" onclick="changeScore('left',1)">+</button></div></div>
+        <div class="colon">:</div>
+        <div><div class="score-name" id="score-p2-label">플레이어 2</div><div class="row"><button class="btn-outline" onclick="changeScore('right',-1)">-</button><div class="score-val" id="scoreR">0</div><button class="btn-outline" onclick="changeScore('right',1)">+</button></div></div>
       </div>
-      <div class="divider"></div>
-      <div style="font-size:11px;color:var(--text-dim);text-align:center;margin-bottom:8px;">프리셋</div>
-      <div class="timer-preset-row">
-        <button class="btn-preset" onclick="setTimer(40)">40분</button>
-        <button class="btn-preset" onclick="setTimer(35)">35분</button>
-        <button class="btn-preset" onclick="setTimer(30)">30분</button>
-        <button class="btn-preset" onclick="setTimer(25)">25분</button>
-        <button class="btn-preset" onclick="setTimer(20)">20분</button>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;margin-top:12px;">
-        <input type="number" id="customMin" placeholder="직접 입력 (분)" min="1" max="99" style="flex:1;" onkeydown="if(event.key==='Enter')setTimerFromInput()">
-        <button class="btn btn-gold" onclick="setTimerFromInput()">설정</button>
-      </div>
-    </div>
+      <button class="btn-outline" style="margin-top:12px;" onclick="resetScore()">점수 초기화</button>
+    </section>
 
+    <section class="card">
+      <div class="card-title">타이머</div>
+      <div class="timer-big" id="timerDisplay">40:00</div>
+      <div class="row" style="justify-content:center;">
+        <button class="btn-green" id="startStopBtn" onclick="toggleTimer()">시작</button>
+        <button class="btn-outline" onclick="resetTimer()">리셋</button>
+      </div>
+      <div class="help">송출 패널 수동 타이머입니다. 현장 진행은 태블릿의 듀얼 시작/저지 호출 흐름을 우선 사용하세요.</div>
+    </section>
   </div>
-  <div id="status-bar">✓ 오버레이 업데이트됨</div>
+
+  <div class="status" id="status-bar">업데이트됨</div>
   <datalist id="deckPresetList"></datalist>
+  <datalist id="rulePresetList"></datalist>
 </div>
 
 <script>
-let state = { p1Name:'', p1Deck:'', p2Name:'', p2Deck:'', tournamentName:'', roundName:'', scoreLeft:0, scoreRight:0, timerSeconds:2400, timerRunning:false, leftImg1:'', leftImg2:'', rightImg1:'', rightImg2:'', p1CardImg:'', p2CardImg:'' };
-let timerInterval = null, timerRunning = false, remainingSeconds = 2400, defaultSeconds = 2400;
+let state = { p1Name:'', p1Deck:'', p2Name:'', p2Deck:'', tournamentName:'', scoreLeft:0, scoreRight:0, timerSeconds:2400, timerRunning:false, mainTimerSeconds:2400, extraTurnSeconds:900, matchTarget:2, leftImg1:'', leftImg2:'', rightImg1:'', rightImg2:'', p1CardImg:'', p2CardImg:'' };
 let tabletUrl = '';
+let overlayUrl = 'http://127.0.0.1:8000/overlay.html';
 let deckPresets = [];
+let rulePresets = [];
+let timerInterval = null;
+let timerRunning = false;
+let remainingSeconds = 2400;
+
+function $(id) { return document.getElementById(id); }
+function escapeHtml(value) { return String(value || '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
+
+function showStatus(message, isErr = false) {
+  const el = $('status-bar');
+  el.textContent = message;
+  el.classList.toggle('err', isErr);
+  el.classList.add('show');
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => el.classList.remove('show'), 1800);
+}
 
 async function loadTabletConnection() {
-  const urlText = document.getElementById('tabletUrlText');
-  const status = document.getElementById('tabletConnectStatus');
-  const qr = document.getElementById('tabletQr');
-  if (!urlText || !status || !qr) return;
-
-  status.textContent = '태블릿 연결 정보를 불러오는 중입니다.';
+  const status = $('tabletConnectStatus');
+  status.textContent = '연결 정보를 불러오는 중입니다.';
   try {
     const res = await fetch('/api/connect-info?_=' + Date.now());
     const info = await res.json();
     tabletUrl = info.tabletUrl;
-    urlText.textContent = tabletUrl;
-    qr.src = '/api/qr.svg?text=' + encodeURIComponent(tabletUrl) + '&_=' + Date.now();
+    overlayUrl = info.overlayUrl;
+    $('tabletUrlText').textContent = tabletUrl;
+    $('obsUrlText').textContent = overlayUrl;
+    const qrUrl = '/api/qr.svg?text=' + encodeURIComponent(tabletUrl) + '&_=' + Date.now();
+    await renderTabletQr(qrUrl);
     status.textContent = `${info.host}:${info.port} 로 태블릿을 연결합니다. 카메라로 QR을 스캔하세요.`;
   } catch (e) {
-    urlText.textContent = '주소 확인 실패';
-    status.textContent = '연결 정보를 불러오지 못했습니다. 서버 창을 확인하세요.';
+    status.textContent = '연결 정보를 불러오지 못했습니다.';
   }
 }
 
-function openTabletPanel() {
-  if (tabletUrl) window.open(tabletUrl, '_blank', 'noopener,noreferrer');
+async function renderTabletQr(qrUrl) {
+  const wrap = $('tabletQrWrap');
+  const inline = $('tabletQrInline');
+  const img = $('tabletQr');
+  wrap.classList.remove('use-img');
+  inline.textContent = 'QR 불러오는 중';
+  try {
+    const res = await fetch(qrUrl);
+    if (!res.ok) throw new Error('QR request failed');
+    inline.innerHTML = await res.text();
+    img.src = qrUrl;
+  } catch (e) {
+    inline.textContent = '';
+    img.src = qrUrl;
+    wrap.classList.add('use-img');
+  }
+}
+
+function openTabletPanel() { if (tabletUrl) window.open(tabletUrl, '_blank', 'noopener,noreferrer'); }
+function openOverlayPreview() { window.open(overlayUrl || 'http://127.0.0.1:8000/overlay.html', '_blank', 'noopener,noreferrer'); }
+async function copyObsUrl() {
+  const url = overlayUrl || $('obsUrlText').textContent;
+  try { await navigator.clipboard.writeText(url); showStatus('OBS URL 복사됨'); }
+  catch (e) { showStatus('클립보드 복사 실패', true); }
 }
 
 async function loadDeckPresets() {
@@ -295,240 +294,236 @@ async function loadDeckPresets() {
     const res = await fetch('/api/deck-presets?_=' + Date.now());
     const result = await res.json();
     deckPresets = result.presets || [];
-    const list = document.getElementById('deckPresetList');
-    if (list) {
-      list.innerHTML = deckPresets
-        .map((preset) => `<option value="${escapeHtml(preset.deckName)}"></option>`)
-        .join('');
-    }
+    $('deckPresetList').innerHTML = deckPresets.map(p => `<option value="${escapeHtml(p.deckName)}"></option>`).join('');
   } catch (e) {}
 }
 
-function escapeHtml(value) {
-  return String(value || '').replace(/[&<>"']/g, (ch) => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;'
-  })[ch]);
+async function loadRulePresets() {
+  try {
+    const res = await fetch('/api/rule-presets?_=' + Date.now());
+    const result = await res.json();
+    rulePresets = result.presets || [];
+    $('rulePresetList').innerHTML = rulePresets.map(p => `<option value="${escapeHtml(p.name)}"></option>`).join('');
+  } catch (e) {}
 }
 
 function findDeckPreset(deckName) {
   const name = String(deckName || '').trim().toLowerCase();
-  return deckPresets.find((preset) => preset.deckName.toLowerCase() === name);
+  return deckPresets.find(p => p.deckName.toLowerCase() === name);
 }
 
 function applyDeckPreset(side) {
   const isLeft = side === 'left';
-  const deckInput = document.getElementById(isLeft ? 'p1Deck' : 'p2Deck');
-  const preset = findDeckPreset(deckInput?.value);
+  const preset = findDeckPreset($(isLeft ? 'p1Deck' : 'p2Deck').value);
   if (!preset) return;
   const image1Key = isLeft ? 'leftImg1' : 'rightImg1';
   const image2Key = isLeft ? 'leftImg2' : 'rightImg2';
-  const preview1 = isLeft ? ['lp1-preview', 'lp1-ph'] : ['rp1-preview', 'rp1-ph'];
-  const preview2 = isLeft ? ['lp2-preview', 'lp2-ph'] : ['rp2-preview', 'rp2-ph'];
-  setInputValue(image1Key, preset.image1);
-  setInputValue(image2Key, preset.image2);
   state[image1Key] = preset.image1;
   state[image2Key] = preset.image2;
-  setPreview(preview1[0], preview1[1], preset.image1);
-  setPreview(preview2[0], preview2[1], preset.image2);
+  setInputValue(image1Key, preset.image1);
+  setInputValue(image2Key, preset.image2);
+  setPreview(isLeft ? 'lp1-preview' : 'rp1-preview', isLeft ? 'lp1-ph' : 'rp1-ph', preset.image1);
+  setPreview(isLeft ? 'lp2-preview' : 'rp2-preview', isLeft ? 'lp2-ph' : 'rp2-ph', preset.image2);
   push();
 }
 
 async function saveDeckPreset(side) {
   const isLeft = side === 'left';
-  const deckName = document.getElementById(isLeft ? 'p1Deck' : 'p2Deck').value.trim();
-  const image1 = document.getElementById(isLeft ? 'leftImg1' : 'rightImg1').value.trim();
-  const image2 = document.getElementById(isLeft ? 'leftImg2' : 'rightImg2').value.trim();
-  if (!deckName || !image1 || !image2) {
-    showStatus('⚠ 덱 이름과 이미지 2장을 모두 입력하세요', true);
-    return;
-  }
+  const deckName = $(isLeft ? 'p1Deck' : 'p2Deck').value.trim();
+  const image1 = $(isLeft ? 'leftImg1' : 'rightImg1').value.trim();
+  const image2 = $(isLeft ? 'leftImg2' : 'rightImg2').value.trim();
+  if (!deckName || !image1 || !image2) { showStatus('덱 이름과 이미지 2장을 모두 입력하세요', true); return; }
   try {
-    const res = await fetch('/api/deck-presets', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ deckName, image1, image2 })
-    });
+    const res = await fetch('/api/deck-presets', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ deckName, image1, image2 }) });
     const result = await res.json();
-    if (!result.ok) throw new Error(result.error || 'preset save failed');
-    deckPresets = result.presets || [];
+    if (!result.ok) throw new Error(result.error || 'save failed');
     await loadDeckPresets();
-    showStatus('✓ 덱 이미지 프리셋 저장됨', false);
-  } catch (e) {
-    showStatus('⚠ 덱 프리셋 저장 실패', true);
-  }
+    showStatus('덱 프리셋 저장됨');
+  } catch (e) { showStatus('덱 프리셋 저장 실패', true); }
 }
 
-// ── 서버 통신 ──
+function applyRuleInputs() {
+  const mainMinutes = Math.max(1, parseInt($('mainTimerMinutes').value || '40', 10));
+  const extraMinutes = Math.max(0, parseInt($('extraTurnMinutes').value || '15', 10));
+  state.matchTarget = parseInt($('matchTarget').value, 10);
+  state.mainTimerSeconds = mainMinutes * 60;
+  state.extraTurnSeconds = extraMinutes * 60;
+  if (!state.timerRunning) {
+    remainingSeconds = state.mainTimerSeconds;
+    state.timerSeconds = remainingSeconds;
+    updateTimerUI();
+  }
+  push();
+}
+
+function applyRulePreset() {
+  const name = $('rulePresetName').value.trim().toLowerCase();
+  const preset = rulePresets.find(p => p.name.toLowerCase() === name);
+  if (!preset) return;
+  $('matchTarget').value = String(preset.matchTarget || 2);
+  $('mainTimerMinutes').value = Math.round((preset.mainTimerSeconds || preset.timerSeconds || 2400) / 60);
+  $('extraTurnMinutes').value = Math.round((preset.extraTurnSeconds || 900) / 60);
+  applyRuleInputs();
+}
+
+async function saveRulePreset() {
+  const name = $('rulePresetName').value.trim();
+  if (!name) { showStatus('룰 프리셋 이름을 입력하세요', true); return; }
+  const payload = {
+    name,
+    matchTarget: parseInt($('matchTarget').value, 10),
+    mainTimerSeconds: Math.max(1, parseInt($('mainTimerMinutes').value || '40', 10)) * 60,
+    extraTurnSeconds: Math.max(0, parseInt($('extraTurnMinutes').value || '15', 10)) * 60,
+  };
+  try {
+    const res = await fetch('/api/rule-presets', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+    const result = await res.json();
+    if (!result.ok) throw new Error(result.error || 'save failed');
+    await loadRulePresets();
+    showStatus('룰 프리셋 저장됨');
+  } catch (e) { showStatus('룰 프리셋 저장 실패', true); }
+}
+
 async function push() {
-  state.p1Name = document.getElementById('p1Name').value;
-  state.p1Deck = document.getElementById('p1Deck').value;
-  state.p2Name = document.getElementById('p2Name').value;
-  state.p2Deck = document.getElementById('p2Deck').value;
-  state.tournamentName = document.getElementById('tournamentName').value;
+  state.p1Name = $('p1Name').value;
+  state.p1Deck = $('p1Deck').value;
+  state.p2Name = $('p2Name').value;
+  state.p2Deck = $('p2Deck').value;
+  state.tournamentName = $('tournamentName').value;
+  state.p1CardImg = $('p1CardImg').value;
+  state.p2CardImg = $('p2CardImg').value;
+  state.leftImg1 = $('leftImg1').value;
+  state.leftImg2 = $('leftImg2').value;
+  state.rightImg1 = $('rightImg1').value;
+  state.rightImg2 = $('rightImg2').value;
+  state.matchTarget = parseInt($('matchTarget').value, 10);
+  state.mainTimerSeconds = Math.max(60, parseInt($('mainTimerMinutes').value || '40', 10) * 60);
+  state.extraTurnSeconds = Math.max(0, parseInt($('extraTurnMinutes').value || '15', 10) * 60);
   state.timerSeconds = remainingSeconds;
   state.timerRunning = timerRunning;
-  document.getElementById('score-p1-label').textContent = state.p1Name || '플레이어 1';
-  document.getElementById('score-p2-label').textContent = state.p2Name || '플레이어 2';
-  // 명함 이미지 state 동기화
-  if (document.getElementById('p1CardImg')) state.p1CardImg = document.getElementById('p1CardImg').value;
-  if (document.getElementById('p2CardImg')) state.p2CardImg = document.getElementById('p2CardImg').value;
+  $('score-p1-label').textContent = state.p1Name || '플레이어 1';
+  $('score-p2-label').textContent = state.p2Name || '플레이어 2';
   try {
-    await fetch('/state', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(state) });
-    showStatus('✓ 오버레이 업데이트됨', false);
-  } catch(e) {
-    showStatus('⚠ 서버 연결 실패 — 서버가 켜져 있는지 확인하세요', true);
-  }
+    const res = await fetch('/api/state', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(state) });
+    const result = await res.json();
+    if (result.ok) state = { ...state, ...result.state };
+    showStatus('업데이트됨');
+  } catch (e) { showStatus('서버 연결 실패', true); }
 }
 
 async function loadState() {
   try {
-    const res = await fetch('/state?_=' + Date.now());
+    const res = await fetch('/api/state?_=' + Date.now());
     const s = await res.json();
     state = { ...state, ...s };
-    setInputValue('p1Name', s.p1Name);
-    setInputValue('p1Deck', s.p1Deck);
-    setInputValue('p2Name', s.p2Name);
-    setInputValue('p2Deck', s.p2Deck);
-    setInputValue('tournamentName', s.tournamentName);
-    setInputValue('p1CardImg', s.p1CardImg);
-    setInputValue('p2CardImg', s.p2CardImg);
-    setInputValue('leftImg1', s.leftImg1);
-    setInputValue('leftImg2', s.leftImg2);
-    setInputValue('rightImg1', s.rightImg1);
-    setInputValue('rightImg2', s.rightImg2);
-    setPreview('p1card-preview', 'p1card-ph', s.p1CardImg || '');
-    setPreview('p2card-preview', 'p2card-ph', s.p2CardImg || '');
-    setPreview('lp1-preview', 'lp1-ph', s.leftImg1 || '');
-    setPreview('lp2-preview', 'lp2-ph', s.leftImg2 || '');
-    setPreview('rp1-preview', 'rp1-ph', s.rightImg1 || '');
-    setPreview('rp2-preview', 'rp2-ph', s.rightImg2 || '');
-    document.getElementById('scoreL').textContent = s.scoreLeft ?? 0;
-    document.getElementById('scoreR').textContent = s.scoreRight ?? 0;
-    document.getElementById('score-p1-label').textContent = s.p1Name || '플레이어 1';
-    document.getElementById('score-p2-label').textContent = s.p2Name || '플레이어 2';
-    state.scoreLeft = s.scoreLeft ?? 0;
-    state.scoreRight = s.scoreRight ?? 0;
-    remainingSeconds = s.timerSeconds ?? 2400;
+    ['p1Name','p1Deck','p2Name','p2Deck','tournamentName','p1CardImg','p2CardImg','leftImg1','leftImg2','rightImg1','rightImg2'].forEach(id => setInputValue(id, state[id]));
+    $('matchTarget').value = String(state.matchTarget || 2);
+    $('mainTimerMinutes').value = Math.round((state.mainTimerSeconds || state.timerSeconds || 2400) / 60);
+    $('extraTurnMinutes').value = Math.round((state.extraTurnSeconds || 900) / 60);
+    ['p1card','p2card','lp1','lp2','rp1','rp2'].forEach((prefix, i) => {
+      const keys = ['p1CardImg','p2CardImg','leftImg1','leftImg2','rightImg1','rightImg2'];
+      setPreview(`${prefix}-preview`, `${prefix}-ph`, state[keys[i]] || '');
+    });
+    $('scoreL').textContent = state.scoreLeft || 0;
+    $('scoreR').textContent = state.scoreRight || 0;
+    $('score-p1-label').textContent = state.p1Name || '플레이어 1';
+    $('score-p2-label').textContent = state.p2Name || '플레이어 2';
+    remainingSeconds = state.timerSeconds ?? state.mainTimerSeconds ?? 2400;
     stopTimer();
-    if (s.timerRunning) {
-      startLocalTimer();
-      document.getElementById('startStopBtn').textContent='⏸ 일시정지';
-      document.getElementById('startStopBtn').className='btn btn-warning';
-    } else {
-      document.getElementById('startStopBtn').textContent='▶ 시작';
-      document.getElementById('startStopBtn').className='btn btn-success';
-    }
+    if (state.timerRunning) startLocalTimer();
+    updateTimerButton();
     updateTimerUI();
-  } catch(e) {}
+  } catch (e) {}
 }
 
-function setInputValue(id, value) {
-  const el = document.getElementById(id);
-  if (el) el.value = value || '';
-}
-
-function showStatus(msg, isErr) {
-  const el = document.getElementById('status-bar');
-  el.textContent = msg;
-  el.classList.toggle('err', isErr);
-  el.classList.add('show');
-  clearTimeout(el._t);
-  el._t = setTimeout(() => el.classList.remove('show'), 2000);
-}
-
-// ── 이미지 ──
-function triggerFile(id) { document.getElementById(id).click(); }
+function setInputValue(id, value) { const el = $(id); if (el) el.value = value || ''; }
+function triggerFile(id) { $(id).click(); }
 async function onFile(input, key, prevId, phId) {
-  const file = input.files[0]; if (!file) return;
-
-  // 미리보기는 blob으로 즉시 표시
-  const blobUrl = URL.createObjectURL(file);
-  setPreview(prevId, phId, blobUrl);
-
-  // 서버에 업로드
+  const file = input.files[0];
+  if (!file) return;
+  setPreview(prevId, phId, URL.createObjectURL(file));
   try {
     const formData = new FormData();
     formData.append('file', file, file.name);
-    const res = await fetch('/upload', { method: 'POST', body: formData });
+    const res = await fetch('/upload', { method:'POST', body:formData });
     const result = await res.json();
-    if (result.ok) {
-      // 서버 경로로 state 저장 (OBS에서 접근 가능한 URL)
-      const serverUrl = 'http://localhost:8000/' + result.path;
-      document.getElementById(key).value = serverUrl;
-      state[key] = serverUrl;
-      push();
-    } else {
-      showStatus('⚠ 이미지 업로드 실패: ' + result.error, true);
-    }
-  } catch(e) {
-    showStatus('⚠ 업로드 오류 — 서버가 켜져 있는지 확인하세요', true);
-  }
+    if (!result.ok) throw new Error(result.error || 'upload failed');
+    const serverUrl = 'http://localhost:8000/' + result.path;
+    $(key).value = serverUrl;
+    state[key] = serverUrl;
+    push();
+  } catch (e) { showStatus('이미지 업로드 실패', true); }
 }
-function onPath(key, prevId, phId) {
-  const v = document.getElementById(key).value.trim();
-  setPreview(prevId, phId, v); state[key] = v; push();
-}
-function clearImg(key, prevId, phId) {
-  document.getElementById(key).value = ''; setPreview(prevId, phId, ''); state[key] = ''; push();
-}
+function onPath(key, prevId, phId) { state[key] = $(key).value.trim(); setPreview(prevId, phId, state[key]); push(); }
+function clearImg(key, prevId, phId) { $(key).value = ''; state[key] = ''; setPreview(prevId, phId, ''); push(); }
 function setPreview(prevId, phId, src) {
-  const img = document.getElementById(prevId), ph = document.getElementById(phId);
+  const img = $(prevId);
+  const ph = $(phId);
+  if (!img || !ph) return;
   if (src) { img.src = src; img.classList.add('loaded'); ph.style.display = 'none'; }
   else { img.src = ''; img.classList.remove('loaded'); ph.style.display = ''; }
 }
 
-// ── 스코어 ──
-function changeScore(side, d) {
-  if (side==='left') { state.scoreLeft = Math.max(0, state.scoreLeft+d); document.getElementById('scoreL').textContent = state.scoreLeft; }
-  else { state.scoreRight = Math.max(0, state.scoreRight+d); document.getElementById('scoreR').textContent = state.scoreRight; }
+function changeScore(side, delta) {
+  if (side === 'left') state.scoreLeft = Math.max(0, (state.scoreLeft || 0) + delta);
+  else state.scoreRight = Math.max(0, (state.scoreRight || 0) + delta);
+  $('scoreL').textContent = state.scoreLeft || 0;
+  $('scoreR').textContent = state.scoreRight || 0;
   push();
 }
-function resetScore() { state.scoreLeft=0; state.scoreRight=0; document.getElementById('scoreL').textContent=0; document.getElementById('scoreR').textContent=0; push(); }
+function resetScore() { state.scoreLeft = 0; state.scoreRight = 0; $('scoreL').textContent = '0'; $('scoreR').textContent = '0'; push(); }
 
-// ── 타이머 ──
 function updateTimerUI() {
-  const m = Math.floor(Math.abs(remainingSeconds)/60), s = Math.abs(remainingSeconds)%60;
-  const el = document.getElementById('timerDisplay');
-  el.textContent = (remainingSeconds<0?'-':'') + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
-  el.classList.remove('warning','danger');
-  if (remainingSeconds<=0) el.classList.add('danger');
-  else if (remainingSeconds<=180) el.classList.add('warning');
+  const value = Math.floor(remainingSeconds || 0);
+  let text;
+  if (value < 0 && state.extraTurnSeconds > 0) {
+    const extraRemaining = state.extraTurnSeconds + value;
+    const absExtra = Math.abs(extraRemaining);
+    text = `EX ${extraRemaining < 0 ? '-' : ''}${String(Math.floor(absExtra / 60)).padStart(2,'0')}:${String(absExtra % 60).padStart(2,'0')}`;
+  } else {
+    const abs = Math.abs(value);
+    text = `${value < 0 ? '-' : ''}${String(Math.floor(abs / 60)).padStart(2,'0')}:${String(abs % 60).padStart(2,'0')}`;
+  }
+  const el = $('timerDisplay');
+  el.textContent = text;
+  el.classList.toggle('danger', remainingSeconds <= 0);
+  el.classList.toggle('warning', remainingSeconds > 0 && remainingSeconds <= 180);
 }
-function toggleTimer() {
-  if (timerRunning) { stopTimer(); document.getElementById('startStopBtn').textContent='▶ 시작'; document.getElementById('startStopBtn').className='btn btn-success'; }
-  else { startLocalTimer(); document.getElementById('startStopBtn').textContent='⏸ 일시정지'; document.getElementById('startStopBtn').className='btn btn-warning'; }
-  push();
+function updateTimerButton() {
+  $('startStopBtn').textContent = timerRunning ? '일시정지' : '시작';
+  $('startStopBtn').className = timerRunning ? 'btn-orange' : 'btn-green';
 }
+function toggleTimer() { timerRunning ? stopTimer() : startLocalTimer(); updateTimerButton(); push(); }
 function startLocalTimer() {
-  if (timerRunning) return; timerRunning = true;
-  timerInterval = setInterval(() => { remainingSeconds--; updateTimerUI(); state.timerSeconds=remainingSeconds; fetch('/state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(state)}).catch(()=>{}); }, 1000);
+  if (timerRunning) return;
+  timerRunning = true;
+  timerInterval = setInterval(() => { remainingSeconds--; updateTimerUI(); state.timerSeconds = remainingSeconds; fetch('/api/state', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(state) }).catch(()=>{}); }, 1000);
 }
-function stopTimer() { timerRunning=false; clearInterval(timerInterval); }
-function resetTimer() { stopTimer(); document.getElementById('startStopBtn').textContent='▶ 시작'; document.getElementById('startStopBtn').className='btn btn-success'; remainingSeconds=defaultSeconds; updateTimerUI(); push(); }
-function setTimer(m) { stopTimer(); document.getElementById('startStopBtn').textContent='▶ 시작'; document.getElementById('startStopBtn').className='btn btn-success'; remainingSeconds=m*60; defaultSeconds=remainingSeconds; updateTimerUI(); push(); }
-function setTimerFromInput() { const v=parseInt(document.getElementById('customMin').value); if(!isNaN(v)&&v>0){setTimer(v); document.getElementById('customMin').value='';} }
+function stopTimer() { timerRunning = false; clearInterval(timerInterval); }
+function resetTimer() { stopTimer(); remainingSeconds = state.mainTimerSeconds || 2400; state.timerSeconds = remainingSeconds; updateTimerButton(); updateTimerUI(); push(); }
 
-// ── 초기화 ──
 function resetAll() {
   if (!confirm('모든 정보를 초기화할까요?')) return;
-  stopTimer(); remainingSeconds=2400; defaultSeconds=2400;
-  state = { p1Name:'', p1Deck:'', p2Name:'', p2Deck:'', tournamentName:'', roundName:'', scoreLeft:0, scoreRight:0, timerSeconds:2400, timerRunning:false, leftImg1:'', leftImg2:'', rightImg1:'', rightImg2:'', p1CardImg:'', p2CardImg:'' };
-  ['p1Name','p1Deck','p2Name','p2Deck','tournamentName','p1CardImg','p2CardImg','leftImg1','leftImg2','rightImg1','rightImg2'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
-  ['lp1-preview','lp2-preview','rp1-preview','rp2-preview','p1card-preview','p2card-preview'].forEach((p,i) => { const phs=['lp1-ph','lp2-ph','rp1-ph','rp2-ph','p1card-ph','p2card-ph']; setPreview(p,phs[i],''); });
-  document.getElementById('scoreL').textContent=0; document.getElementById('scoreR').textContent=0;
-  document.getElementById('startStopBtn').textContent='▶ 시작'; document.getElementById('startStopBtn').className='btn btn-success';
-  updateTimerUI(); push();
+  stopTimer();
+  remainingSeconds = 2400;
+  state = { ...state, p1Name:'', p1Deck:'', p2Name:'', p2Deck:'', scoreLeft:0, scoreRight:0, timerSeconds:2400, timerRunning:false, mainTimerSeconds:2400, extraTurnSeconds:900, matchTarget:2, leftImg1:'', leftImg2:'', rightImg1:'', rightImg2:'', p1CardImg:'', p2CardImg:'' };
+  ['p1Name','p1Deck','p2Name','p2Deck','p1CardImg','p2CardImg','leftImg1','leftImg2','rightImg1','rightImg2'].forEach(id => setInputValue(id, ''));
+  $('matchTarget').value = '2';
+  $('mainTimerMinutes').value = '40';
+  $('extraTurnMinutes').value = '15';
+  ['p1card','p2card','lp1','lp2','rp1','rp2'].forEach(prefix => setPreview(`${prefix}-preview`, `${prefix}-ph`, ''));
+  $('scoreL').textContent = '0';
+  $('scoreR').textContent = '0';
+  updateTimerButton();
+  updateTimerUI();
+  push();
 }
 
 loadState();
 loadTabletConnection();
 loadDeckPresets();
+loadRulePresets();
 setInterval(loadTabletConnection, 10000);
-updateTimerUI();
 </script>
 </body>
 </html>

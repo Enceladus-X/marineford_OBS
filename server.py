@@ -39,6 +39,7 @@ DATA_DIR = data_dir()
 STATE_FILE = os.path.join(DATA_DIR, "state.json")
 EVENTS_FILE = os.path.join(DATA_DIR, "events.jsonl")
 PRESETS_FILE = os.path.join(DATA_DIR, "deck_presets.json")
+RULE_PRESETS_FILE = os.path.join(DATA_DIR, "rule_presets.json")
 
 MATCH_FIELDS = [
     "matchId",
@@ -49,6 +50,10 @@ MATCH_FIELDS = [
     "scoreRight",
     "timerSeconds",
     "timerRunning",
+    "mainTimerSeconds",
+    "extraTurnSeconds",
+    "judgePreviousPhase",
+    "judgeTimerWasRunning",
     "duelStartedAt",
     "duelEndedAt",
     "recordingStartedAt",
@@ -66,6 +71,8 @@ DEFAULT_STATE = {
     "scoreRight": 0,
     "timerSeconds": 2400,
     "timerRunning": False,
+    "mainTimerSeconds": 2400,
+    "extraTurnSeconds": 900,
     "leftImg1": "",
     "leftImg2": "",
     "rightImg1": "",
@@ -76,6 +83,8 @@ DEFAULT_STATE = {
     "phase": "idle",
     "currentSet": 1,
     "matchTarget": 2,
+    "judgePreviousPhase": "",
+    "judgeTimerWasRunning": False,
     "duelStartedAt": "",
     "duelEndedAt": "",
     "recordingStartedAt": "",
@@ -117,7 +126,7 @@ def normalize_state(data):
     if isinstance(data, dict):
         state.update(data)
 
-    for key in ("scoreLeft", "scoreRight", "timerSeconds", "currentSet", "matchTarget"):
+    for key in ("scoreLeft", "scoreRight", "timerSeconds", "mainTimerSeconds", "extraTurnSeconds", "currentSet", "matchTarget"):
         try:
             state[key] = int(state.get(key, DEFAULT_STATE[key]))
         except (TypeError, ValueError):
@@ -126,11 +135,16 @@ def normalize_state(data):
     state["scoreLeft"] = max(0, state["scoreLeft"])
     state["scoreRight"] = max(0, state["scoreRight"])
     state["currentSet"] = max(1, state["currentSet"])
-    state["matchTarget"] = max(1, state["matchTarget"])
+    state["matchTarget"] = 1 if state["matchTarget"] <= 1 else 2
+    state["mainTimerSeconds"] = max(60, state["mainTimerSeconds"])
+    state["extraTurnSeconds"] = max(0, state["extraTurnSeconds"])
     state["timerRunning"] = bool(state.get("timerRunning", False))
+    state["judgeTimerWasRunning"] = bool(state.get("judgeTimerWasRunning", False))
 
-    if state.get("phase") not in {"idle", "round_waiting", "dueling", "sideboarding", "finished"}:
+    if state.get("phase") not in {"idle", "round_waiting", "dueling", "sideboarding", "finished", "judge_call"}:
         state["phase"] = "idle"
+    if state.get("judgePreviousPhase") not in {"idle", "round_waiting", "dueling", "sideboarding", "finished"}:
+        state["judgePreviousPhase"] = ""
 
     return state
 
@@ -182,6 +196,53 @@ def read_deck_presets():
 
 def write_deck_presets(presets):
     with open(PRESETS_FILE, "w", encoding="utf-8") as f:
+        json.dump(presets, f, ensure_ascii=False, indent=2)
+
+
+def normalize_preset_name(name):
+    return str(name or "").strip()
+
+
+def read_rule_presets():
+    if not os.path.exists(RULE_PRESETS_FILE):
+        return {}
+    try:
+        with open(RULE_PRESETS_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception:
+        return {}
+    if not isinstance(data, dict):
+        return {}
+    presets = {}
+    for name, preset in data.items():
+        preset_name = normalize_preset_name(name)
+        if not preset_name or not isinstance(preset, dict):
+            continue
+        try:
+            timer_seconds = int(preset.get("mainTimerSeconds", preset.get("timerSeconds", DEFAULT_STATE["mainTimerSeconds"])))
+        except (TypeError, ValueError):
+            timer_seconds = DEFAULT_STATE["timerSeconds"]
+        try:
+            extra_turn_seconds = int(preset.get("extraTurnSeconds", DEFAULT_STATE["extraTurnSeconds"]))
+        except (TypeError, ValueError):
+            extra_turn_seconds = DEFAULT_STATE["extraTurnSeconds"]
+        try:
+            match_target = int(preset.get("matchTarget", DEFAULT_STATE["matchTarget"]))
+        except (TypeError, ValueError):
+            match_target = DEFAULT_STATE["matchTarget"]
+        presets[preset_name] = {
+            "name": preset_name,
+            "mainTimerSeconds": max(60, timer_seconds),
+            "timerSeconds": max(60, timer_seconds),
+            "extraTurnSeconds": max(0, extra_turn_seconds),
+            "matchTarget": 1 if match_target <= 1 else 2,
+            "updatedAt": str(preset.get("updatedAt", "") or ""),
+        }
+    return presets
+
+
+def write_rule_presets(presets):
+    with open(RULE_PRESETS_FILE, "w", encoding="utf-8") as f:
         json.dump(presets, f, ensure_ascii=False, indent=2)
 
 
@@ -259,11 +320,26 @@ def snapshot_match(state):
     return {key: state.get(key, DEFAULT_STATE.get(key)) for key in MATCH_FIELDS}
 
 
+def settle_timer(state, timestamp):
+    if not state.get("timerRunning"):
+        return state
+    updated_at = parse_time(state.get("updatedAt"))
+    now_dt = parse_time(timestamp)
+    if not updated_at or not now_dt:
+        return state
+    elapsed = max(0, int((now_dt - updated_at).total_seconds()))
+    if elapsed:
+        state["timerSeconds"] = int(state.get("timerSeconds", 0)) - elapsed
+        state["updatedAt"] = timestamp
+    return state
+
+
 def apply_action(payload):
     action = payload.get("action")
     state = read_state()
-    before = snapshot_match(state)
     timestamp = now_iso()
+    state = settle_timer(state, timestamp)
+    before = snapshot_match(state)
     event = None
 
     if not state.get("matchId"):
@@ -279,6 +355,8 @@ def apply_action(payload):
                 "duelStartedAt": timestamp,
                 "duelEndedAt": "",
                 "timerRunning": True,
+                "judgePreviousPhase": "",
+                "judgeTimerWasRunning": False,
                 "updatedAt": timestamp,
             }
         )
@@ -325,6 +403,58 @@ def apply_action(payload):
             "phase": state["phase"],
         }
 
+    elif action == "set_score":
+        left = payload.get("scoreLeft", state["scoreLeft"])
+        right = payload.get("scoreRight", state["scoreRight"])
+        try:
+            state["scoreLeft"] = max(0, int(left))
+            state["scoreRight"] = max(0, int(right))
+        except (TypeError, ValueError):
+            raise ValueError("scoreLeft and scoreRight must be numbers")
+        state["currentSet"] = max(1, state["scoreLeft"] + state["scoreRight"] + 1)
+        state["updatedAt"] = timestamp
+        event = {
+            "type": "score_adjust",
+            "time": timestamp,
+            "scoreLeft": state["scoreLeft"],
+            "scoreRight": state["scoreRight"],
+        }
+
+    elif action == "toggle_judge_call":
+        if state.get("phase") == "judge_call":
+            previous_phase = state.get("judgePreviousPhase") or "dueling"
+            state.update(
+                {
+                    "phase": previous_phase,
+                    "timerRunning": bool(state.get("judgeTimerWasRunning")),
+                    "judgePreviousPhase": "",
+                    "judgeTimerWasRunning": False,
+                    "updatedAt": timestamp,
+                }
+            )
+            event = {
+                "type": "judge_call_end",
+                "time": timestamp,
+                "phase": previous_phase,
+                "timerRunning": state["timerRunning"],
+            }
+        else:
+            previous_phase = state.get("phase") or "idle"
+            state.update(
+                {
+                    "phase": "judge_call",
+                    "timerRunning": False,
+                    "judgePreviousPhase": previous_phase,
+                    "judgeTimerWasRunning": bool(state.get("timerRunning")),
+                    "updatedAt": timestamp,
+                }
+            )
+            event = {
+                "type": "judge_call_start",
+                "time": timestamp,
+                "previousPhase": previous_phase,
+            }
+
     elif action == "mark_recording_start":
         state.update({"recordingStartedAt": timestamp, "updatedAt": timestamp})
         event = {
@@ -352,6 +482,8 @@ def apply_action(payload):
         keep = {
             "tournamentName": state.get("tournamentName", ""),
             "matchTarget": state.get("matchTarget", DEFAULT_STATE["matchTarget"]),
+            "extraTurnSeconds": state.get("extraTurnSeconds", DEFAULT_STATE["extraTurnSeconds"]),
+            "mainTimerSeconds": state.get("mainTimerSeconds", DEFAULT_STATE["mainTimerSeconds"]),
         }
         state = normalize_state(keep)
         state.update(
@@ -361,11 +493,13 @@ def apply_action(payload):
                 "currentSet": 1,
                 "scoreLeft": 0,
                 "scoreRight": 0,
-                "timerSeconds": DEFAULT_STATE["timerSeconds"],
+                "timerSeconds": keep["mainTimerSeconds"],
                 "timerRunning": False,
                 "duelStartedAt": "",
                 "duelEndedAt": "",
                 "recordingStartedAt": "",
+                "judgePreviousPhase": "",
+                "judgeTimerWasRunning": False,
                 "updatedAt": timestamp,
             }
         )
@@ -777,6 +911,10 @@ class Handler(SimpleHTTPRequestHandler):
             presets = read_deck_presets()
             self.send_json({"presets": sorted(presets.values(), key=lambda item: item["deckName"].casefold())})
             return
+        if path == "/api/rule-presets":
+            presets = read_rule_presets()
+            self.send_json({"presets": sorted(presets.values(), key=lambda item: item["name"].casefold())})
+            return
         if path == "/api/qr.svg":
             query = parse_qs(parsed.query)
             text = query.get("text", [""])[0]
@@ -849,6 +987,33 @@ class Handler(SimpleHTTPRequestHandler):
                 }
                 write_deck_presets(presets)
                 self.send_json({"ok": True, "presets": sorted(presets.values(), key=lambda item: item["deckName"].casefold())})
+            except Exception as e:
+                self.send_json({"ok": False, "error": str(e)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if path == "/api/rule-presets":
+            try:
+                payload = self.read_json_body()
+                preset_name = normalize_preset_name(payload.get("name"))
+                if not preset_name:
+                    raise ValueError("name is required")
+                try:
+                    main_timer_seconds = int(payload.get("mainTimerSeconds", payload.get("timerSeconds", DEFAULT_STATE["mainTimerSeconds"])))
+                    extra_turn_seconds = int(payload.get("extraTurnSeconds", DEFAULT_STATE["extraTurnSeconds"]))
+                    match_target = int(payload.get("matchTarget", DEFAULT_STATE["matchTarget"]))
+                except (TypeError, ValueError):
+                    raise ValueError("timer and matchTarget must be numbers")
+                presets = read_rule_presets()
+                presets[preset_name] = {
+                    "name": preset_name,
+                    "mainTimerSeconds": max(60, main_timer_seconds),
+                    "timerSeconds": max(60, main_timer_seconds),
+                    "extraTurnSeconds": max(0, extra_turn_seconds),
+                    "matchTarget": 1 if match_target <= 1 else 2,
+                    "updatedAt": now_iso(),
+                }
+                write_rule_presets(presets)
+                self.send_json({"ok": True, "presets": sorted(presets.values(), key=lambda item: item["name"].casefold())})
             except Exception as e:
                 self.send_json({"ok": False, "error": str(e)}, HTTPStatus.BAD_REQUEST)
             return

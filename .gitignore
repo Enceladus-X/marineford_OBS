@@ -13,6 +13,7 @@ dist/
 state.json
 events.jsonl
 deck_presets.json
+rule_presets.json
 exports/
 
 # Local editor and OS noise.

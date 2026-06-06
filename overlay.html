@@ -2,308 +2,78 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=1920">
-<title>Marinford Overlay</title>
-<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
+<title>Marineford OBS Overlay</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; font-family: 'Noto Sans KR', sans-serif; }
-
-  /* ══════════════════════════════
-     상단 바
-  ══════════════════════════════ */
-  #top-bar {
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 100px;
-    display: flex;
-    align-items: stretch;
-  }
-
-  /* 플레이어 블록 */
-  .player-block {
-    width: 560px;
-    display: flex;
-    flex-direction: row;
-    align-items: stretch;
-    background: #000;
-    border-bottom: 3px solid #c9a84c;
-    overflow: hidden;
-  }
-  .player-block.right { margin-left: auto; flex-direction: row-reverse; }
-
-  /* 명함 이미지 구역 — 상단바 아래로 약 2/3 노출 */
-  .player-block { overflow: visible; z-index: 10; }
-  .player-card-img {
-    width: 260px;
-    height: 100px;        /* 상단바 높이와 동일 */
-    flex-shrink: 0;
-    overflow: hidden;
-    background: transparent;
-    align-self: flex-start;
-    position: relative;
-    z-index: 10;
-  }
-  .player-card-img img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center top;
-    display: block;
-  }
-  .player-card-img.empty { background: transparent; }
-
-  /* 닉네임 구역 */
-  .player-info {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    padding: 0 22px;
-  }
-  .player-block.right .player-info { justify-content: flex-end; }
-
-  .player-name {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 58px;
-    color: #fff;
-    letter-spacing: 0.04em;
-    line-height: 1;
-    white-space: nowrap;
-  }
-
-  /* 중앙 타이머 블록 */
-  #center-top {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: #000;
-    border-bottom: 3px solid #c9a84c;
-  }
-  #timer-display {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 62px;
-    color: #fff;
-    line-height: 1;
-    letter-spacing: 0.06em;
-    transition: color 0.5s;
-  }
-  #phase-display {
-    margin-top: 4px;
-    font-family: 'Black Han Sans', sans-serif;
-    font-size: 18px;
-    color: #c9a84c;
-    letter-spacing: 0.08em;
-  }
-  #timer-display.warning { color: #ff9900; }
-  #timer-display.danger  { color: #ff3333; animation: pulse 0.8s infinite; }
-
-  /* ══════════════════════════════
-     사이드 이미지 패널
-  ══════════════════════════════ */
-  .side-panel {
-    position: absolute;
-    top: 100px;
-    bottom: 90px;
-    width: 240px;
-    background: #000;
-    overflow: hidden;
-  }
-  .side-panel.left  { left: 0; }
-  .side-panel.right { right: 0; }
-
-  /* 상단 슬롯: 꽉 채우기 (object-fit: cover) */
-  .img-slot {
-    position: absolute;
-    left: 0; right: 0;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .img-slot img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-    display: block;
-  }
-  .img-slot.hidden { display: none; }
-
-  /* 슬롯 1 단독: 전체 채움 */
-  .slot-single { top: 0; bottom: 0; }
-
-  /* 슬롯 1+2 분할 — 상단은 cover, 하단은 contain 유지 */
-  .slot-top    { top: 0; height: calc(50% - 4px); }
-  .slot-bottom {
-    bottom: 0;
-    height: calc(50% - 4px);
-    background: #000;
-  }
-  .slot-bottom img { object-fit: contain; }
-
-  /* ══════════════════════════════
-     하단 바
-  ══════════════════════════════ */
-  #bottom-bar {
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    height: 90px;
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* 스코어 + 대회명 행 */
-  #score-info-row {
-    height: 90px;
-    background: #000;
-    border-top: 3px solid #c9a84c;
-    display: flex;
-    align-items: center;
-  }
-
-  /* 좌측 대회명 */
-  #tournament-block {
-    width: 560px;
-    padding: 0 28px;
-    display: flex;
-    align-items: center;
-  }
-  #tournament-name {
-    font-family: 'Black Han Sans', sans-serif;
-    font-size: 32px;
-    color: #fff;
-    letter-spacing: 0.04em;
-    white-space: nowrap;
-  }
-
-  /* 가운데 스코어 */
-  #score-block {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0;
-  }
-  .score-num {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 62px;
-    color: #fff;
-    line-height: 1;
-    min-width: 44px;
-    text-align: center;
-  }
-  .score-sep {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 46px;
-    color: #c9a84c;
-    margin: 0 10px;
-    line-height: 1;
-  }
-
-  /* 우측 여백 (대칭) */
-  #score-right-pad { width: 560px; }
-
-  #phase-banner {
-    position: absolute;
-    inset: 0;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 20px;
-    background: rgba(0,0,0,0.92);
-    z-index: 20;
-  }
-  #phase-banner.show { display: flex; }
-  #phase-banner .banner-main {
-    font-family: 'Black Han Sans', sans-serif;
-    font-size: 78px;
-    color: #fff;
-    letter-spacing: 0.04em;
-  }
-  #phase-banner .banner-sub {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 44px;
-    color: #c9a84c;
-    letter-spacing: 0.08em;
-  }
-
-  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+  :root { --gold:#c9a84c; --gold2:#efd36d; --text:#f7f4ea; --muted:rgba(247,244,234,.62); --red:#d94b52; --blue:#4078dd; }
+  * { box-sizing:border-box; }
+  body { margin:0; width:100vw; height:100vh; overflow:hidden; background:transparent; color:var(--text); font-family:'Noto Sans KR',sans-serif; }
+  .overlay { position:relative; width:1920px; height:1080px; transform-origin:top left; background:transparent; }
+  .top { position:absolute; left:52px; right:52px; top:34px; display:grid; grid-template-columns:1fr auto 1fr; gap:28px; align-items:start; z-index:5; }
+  .player { min-width:0; display:grid; grid-template-columns:96px 1fr; gap:14px; align-items:center; }
+  .player.right { grid-template-columns:1fr 96px; text-align:right; }
+  .card-img { width:96px; height:96px; border:2px solid rgba(201,168,76,.5); border-radius:8px; background:rgba(8,9,14,.72); display:grid; place-items:center; overflow:hidden; }
+  .card-img.empty { opacity:.35; }
+  .card-img img { max-width:100%; max-height:100%; object-fit:contain; display:none; }
+  .name { min-width:0; font-size:38px; font-weight:900; line-height:1.05; text-shadow:0 3px 10px rgba(0,0,0,.8); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .scoreline { color:var(--muted); font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:.08em; margin-top:4px; }
+  .center { display:grid; justify-items:center; gap:4px; min-width:260px; }
+  #timer-display { font-family:'Bebas Neue',sans-serif; color:var(--gold2); font-size:68px; line-height:.9; letter-spacing:0; text-shadow:0 4px 12px rgba(0,0,0,.85); }
+  #timer-display.warning { color:#ffbc73; }
+  #timer-display.danger { color:#ff7078; animation:pulse .8s infinite; }
+  #phase-display { color:var(--muted); font-size:18px; font-weight:900; text-shadow:0 2px 8px rgba(0,0,0,.8); }
+  #tournament-name { color:var(--gold); font-size:16px; font-weight:900; text-shadow:0 2px 8px rgba(0,0,0,.85); }
+  .score { position:absolute; left:50%; top:136px; transform:translateX(-50%); display:flex; gap:18px; align-items:center; font-family:'Bebas Neue',sans-serif; font-size:92px; line-height:.8; text-shadow:0 5px 14px rgba(0,0,0,.86); z-index:4; }
+  .score .sep { color:var(--gold); }
+  .image-side { position:absolute; top:180px; bottom:42px; width:310px; display:grid; grid-template-rows:1fr 1fr; gap:18px; z-index:3; }
+  .image-side.left { left:42px; }
+  .image-side.right { right:42px; }
+  .image-slot { border:2px solid rgba(201,168,76,.35); border-radius:10px; background:rgba(8,9,14,.62); overflow:hidden; display:grid; place-items:center; }
+  .image-slot.single { grid-row:1/-1; }
+  .image-slot.hidden { display:none; }
+  .image-slot img { width:100%; height:100%; object-fit:contain; }
+  #phase-banner { position:absolute; inset:0; display:none; align-items:center; justify-content:center; flex-direction:column; gap:20px; background:rgba(0,0,0,.92); z-index:20; text-align:center; }
+  #phase-banner.show { display:flex; }
+  .banner-main { font-size:92px; font-weight:900; letter-spacing:.02em; text-shadow:0 8px 22px rgba(0,0,0,.9); }
+  .banner-sub { color:var(--gold2); font-family:'Bebas Neue',sans-serif; font-size:42px; letter-spacing:.12em; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
 </style>
 </head>
 <body>
-
-<!-- 상단 바 -->
-<div id="top-bar">
-  <!-- 플레이어 1 (좌) -->
-  <div class="player-block left">
-    <div class="player-card-img empty" id="p1-card-wrap">
-      <img id="p1-card-img" src="" alt="" style="display:none;">
+<div class="overlay" id="overlay">
+  <div class="top">
+    <div class="player">
+      <div class="card-img empty" id="p1-card-wrap"><img id="p1-card-img" alt=""></div>
+      <div><div class="name" id="p1-name"></div><div class="scoreline">PLAYER 1</div></div>
     </div>
-    <div class="player-info">
-      <div class="player-name" id="p1-name"></div>
-    </div>
-  </div>
-
-  <!-- 중앙 타이머 -->
-  <div id="center-top">
-    <div id="timer-display">40:00</div>
-    <div id="phase-display">대기중 · 1세트</div>
-  </div>
-
-  <!-- 플레이어 2 (우) -->
-  <div class="player-block right">
-    <div class="player-card-img empty" id="p2-card-wrap">
-      <img id="p2-card-img" src="" alt="" style="display:none;">
-    </div>
-    <div class="player-info">
-      <div class="player-name" id="p2-name"></div>
-    </div>
-  </div>
-</div>
-
-<!-- 좌측 사이드 패널 -->
-<div class="side-panel left">
-  <div class="img-slot slot-single hidden" id="left-img-1-single"><img id="left-img-1" src="" alt=""></div>
-  <div class="img-slot slot-top hidden"    id="left-img-1-top"><img id="left-img-1b" src="" alt=""></div>
-  <div class="img-slot slot-bottom hidden" id="left-img-2"><img id="left-img-2-el" src="" alt=""></div>
-</div>
-
-<!-- 우측 사이드 패널 -->
-<div class="side-panel right">
-  <div class="img-slot slot-single hidden" id="right-img-1-single"><img id="right-img-1" src="" alt=""></div>
-  <div class="img-slot slot-top hidden"    id="right-img-1-top"><img id="right-img-1b" src="" alt=""></div>
-  <div class="img-slot slot-bottom hidden" id="right-img-2"><img id="right-img-2-el" src="" alt=""></div>
-</div>
-
-<!-- 하단 바 -->
-<div id="bottom-bar">
-  <div id="score-info-row">
-    <!-- 좌측 대회명 -->
-    <div id="tournament-block">
+    <div class="center">
+      <div id="timer-display">40:00</div>
+      <div id="phase-display">대기중 · 1세트</div>
       <div id="tournament-name"></div>
     </div>
-    <!-- 가운데 스코어 -->
-    <div id="score-block">
-      <div class="score-num" id="score-left">0</div>
-      <div class="score-sep">:</div>
-      <div class="score-num" id="score-right">0</div>
+    <div class="player right">
+      <div><div class="name" id="p2-name"></div><div class="scoreline">PLAYER 2</div></div>
+      <div class="card-img empty" id="p2-card-wrap"><img id="p2-card-img" alt=""></div>
     </div>
-    <!-- 우측 여백 -->
-    <div id="score-right-pad"></div>
   </div>
-<div class="logo-slot empty" id="logo-slot-2"></div>
-    <div class="logo-slot empty" id="logo-slot-3"></div>
-    <div class="logo-slot empty" id="logo-slot-4"></div>
-    <div class="logo-slot empty" id="logo-slot-5"></div>
-  </div>
-</div>
 
-<div id="phase-banner">
-  <div class="banner-main" id="phase-banner-main">사이드덱 교체중</div>
-  <div class="banner-sub" id="phase-banner-sub">NEXT SET READY</div>
+  <div class="score"><span id="score-left">0</span><span class="sep">:</span><span id="score-right">0</span></div>
+
+  <div class="image-side left">
+    <div class="image-slot single hidden" id="left-img-1-single"><img id="left-img-1" alt=""></div>
+    <div class="image-slot hidden" id="left-img-1-top"><img id="left-img-1b" alt=""></div>
+    <div class="image-slot hidden" id="left-img-2"><img id="left-img-2-el" alt=""></div>
+  </div>
+  <div class="image-side right">
+    <div class="image-slot single hidden" id="right-img-1-single"><img id="right-img-1" alt=""></div>
+    <div class="image-slot hidden" id="right-img-1-top"><img id="right-img-1b" alt=""></div>
+    <div class="image-slot hidden" id="right-img-2"><img id="right-img-2-el" alt=""></div>
+  </div>
+
+  <div id="phase-banner">
+    <div class="banner-main" id="phase-banner-main">사이드 교체중</div>
+    <div class="banner-sub" id="phase-banner-sub">NEXT SET READY</div>
+  </div>
 </div>
 
 <script>
@@ -312,19 +82,26 @@ let timerRunning = false;
 let timerInterval = null;
 let lastState = null;
 
+function scaleOverlay() {
+  const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+  document.getElementById('overlay').style.transform = `scale(${scale})`;
+}
+window.addEventListener('resize', scaleOverlay);
+scaleOverlay();
+
 function applyState(s) {
   if (!s) return;
   document.getElementById('p1-name').textContent = s.p1Name || '';
   document.getElementById('p2-name').textContent = s.p2Name || '';
   document.getElementById('tournament-name').textContent = s.tournamentName || '';
-  document.getElementById('score-left').textContent  = s.scoreLeft  ?? 0;
+  document.getElementById('score-left').textContent = s.scoreLeft ?? 0;
   document.getElementById('score-right').textContent = s.scoreRight ?? 0;
-
-  // 명함 이미지
   setCardImg('p1-card-img', 'p1-card-wrap', s.p1CardImg || '');
   setCardImg('p2-card-img', 'p2-card-wrap', s.p2CardImg || '');
-
-  if (s.timerSeconds !== undefined) { remainingSeconds = s.timerSeconds; updateTimerDisplay(); }
+  if (s.timerSeconds !== undefined) {
+    remainingSeconds = s.timerSeconds;
+    updateTimerDisplay();
+  }
   if (s.timerRunning !== undefined) {
     if (s.timerRunning && !timerRunning) startTimer();
     else if (!s.timerRunning && timerRunning) stopTimer();
@@ -340,15 +117,15 @@ function applyPhase(s) {
     round_waiting: '다음 라운드 대기중',
     dueling: '듀얼중',
     sideboarding: '사이드덱 교체중',
-    finished: '매치 종료'
+    finished: '매치 종료',
+    judge_call: '저지 호출 중'
   };
   const setNumber = s.currentSet || 1;
   document.getElementById('phase-display').textContent = `${labels[phase] || labels.idle} · ${setNumber}세트`;
-
   const banner = document.getElementById('phase-banner');
   const main = document.getElementById('phase-banner-main');
   const sub = document.getElementById('phase-banner-sub');
-  const showBanner = phase === 'sideboarding' || phase === 'finished' || phase === 'round_waiting';
+  const showBanner = ['sideboarding', 'finished', 'round_waiting', 'judge_call'].includes(phase);
   banner.classList.toggle('show', showBanner);
   if (phase === 'finished') {
     main.textContent = '매치 종료';
@@ -356,6 +133,9 @@ function applyPhase(s) {
   } else if (phase === 'round_waiting') {
     main.textContent = '다음 라운드 대기중';
     sub.textContent = 'WAITING FOR NEXT ROUND';
+  } else if (phase === 'judge_call') {
+    main.textContent = '저지 호출 중';
+    sub.textContent = 'JUDGE CALL';
   } else {
     main.textContent = '사이드 교체중';
     sub.textContent = 'NEXT SET READY';
@@ -363,10 +143,10 @@ function applyPhase(s) {
 }
 
 function setCardImg(imgId, wrapId, src) {
-  const img  = document.getElementById(imgId);
+  const img = document.getElementById(imgId);
   const wrap = document.getElementById(wrapId);
   if (src) { img.src = src; img.style.display = 'block'; wrap.classList.remove('empty'); }
-  else      { img.src = ''; img.style.display = 'none';  wrap.classList.add('empty'); }
+  else { img.src = ''; img.style.display = 'none'; wrap.classList.add('empty'); }
 }
 
 function applyImages(s) {
@@ -387,29 +167,38 @@ function applyImages(s) {
 }
 
 function updateTimerDisplay() {
-  const m = Math.floor(Math.abs(remainingSeconds) / 60);
-  const s = Math.abs(remainingSeconds) % 60;
-  const sign = remainingSeconds < 0 ? '-' : '';
-  document.getElementById('timer-display').textContent = sign + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  const extraTurnSeconds = window.lastOverlayState?.extraTurnSeconds || 0;
+  const value = Math.floor(remainingSeconds || 0);
+  let text;
+  if (value < 0 && extraTurnSeconds > 0) {
+    const extraRemaining = extraTurnSeconds + value;
+    const absExtra = Math.abs(extraRemaining);
+    text = 'EX ' + (extraRemaining < 0 ? '-' : '') + String(Math.floor(absExtra / 60)).padStart(2,'0') + ':' + String(absExtra % 60).padStart(2,'0');
+  } else {
+    const abs = Math.abs(value);
+    text = (value < 0 ? '-' : '') + String(Math.floor(abs / 60)).padStart(2,'0') + ':' + String(abs % 60).padStart(2,'0');
+  }
+  document.getElementById('timer-display').textContent = text;
   const el = document.getElementById('timer-display');
-  el.classList.remove('warning','danger');
-  if (remainingSeconds <= 0) el.classList.add('danger');
-  else if (remainingSeconds <= 180) el.classList.add('warning');
+  el.classList.toggle('danger', remainingSeconds <= 0);
+  el.classList.toggle('warning', remainingSeconds > 0 && remainingSeconds <= 180);
 }
 
 function startTimer() {
-  if (timerRunning) return; timerRunning = true;
+  if (timerRunning) return;
+  timerRunning = true;
   timerInterval = setInterval(() => { remainingSeconds--; updateTimerDisplay(); }, 1000);
 }
 function stopTimer() { timerRunning = false; clearInterval(timerInterval); }
 
 async function poll() {
   try {
-    const res = await fetch('/state?_=' + Date.now());
+    const res = await fetch('/api/state?_=' + Date.now());
     const s = await res.json();
+    window.lastOverlayState = s;
     const str = JSON.stringify(s);
     if (str !== lastState) { lastState = str; applyState(s); }
-  } catch(e) {}
+  } catch (e) {}
 }
 poll();
 setInterval(poll, 500);
