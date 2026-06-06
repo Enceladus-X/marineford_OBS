@@ -510,7 +510,15 @@ def apply_action(payload):
         }
 
     elif action == "finish_match":
-        state.update({"phase": "finished", "timerRunning": False, "updatedAt": timestamp})
+        state.update(
+            {
+                "phase": "finished",
+                "timerRunning": False,
+                "judgePreviousPhase": "",
+                "judgeTimerWasRunning": False,
+                "updatedAt": timestamp,
+            }
+        )
         event = {
             "type": "match_finished",
             "time": timestamp,
@@ -955,6 +963,10 @@ class Handler(SimpleHTTPRequestHandler):
         if path in {"/state", "/api/state"}:
             try:
                 data = self.read_json_body()
+                current = read_state()
+                if current.get("phase") in {"judge_call", "finished"} and data.get("phase") != current.get("phase"):
+                    data = current.copy()
+                    data["timerRunning"] = False
                 data["updatedAt"] = now_iso()
                 self.send_json({"ok": True, "state": write_state(data)})
             except Exception as e:

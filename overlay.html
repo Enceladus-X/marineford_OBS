@@ -9,17 +9,17 @@
   * { box-sizing:border-box; }
   body { margin:0; width:100vw; height:100vh; overflow:hidden; background:transparent; color:var(--text); font-family:'Noto Sans KR',sans-serif; }
   .overlay { position:relative; width:1920px; height:1080px; transform-origin:top left; background:transparent; }
-  .top { position:absolute; left:50px; right:50px; top:20px; display:grid; grid-template-columns:minmax(0,1fr) 320px minmax(0,1fr); gap:32px; align-items:start; z-index:6; }
+  .top { position:absolute; left:50px; right:50px; top:18px; display:grid; grid-template-columns:minmax(0,1fr) 560px minmax(0,1fr); gap:32px; align-items:start; z-index:6; }
   .player { min-width:0; padding-top:8px; }
   .player.right { text-align:right; }
   .name { min-width:0; font-size:58px; font-weight:900; line-height:1; text-shadow:0 4px 14px rgba(0,0,0,.9); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .scoreline { color:var(--gold); font-family:'Bebas Neue',sans-serif; font-size:24px; letter-spacing:.12em; margin-top:8px; text-shadow:0 3px 10px rgba(0,0,0,.85); }
-  .center { display:grid; justify-items:center; gap:4px; min-width:320px; }
-  #timer-display { font-family:'Bebas Neue',sans-serif; color:var(--gold2); font-size:68px; line-height:.9; letter-spacing:0; text-shadow:0 4px 12px rgba(0,0,0,.85); }
+  .center { display:grid; justify-items:center; gap:6px; min-width:560px; }
+  #timer-display { font-family:'Bebas Neue',sans-serif; color:var(--gold2); font-size:78px; line-height:.86; letter-spacing:0; text-shadow:0 4px 12px rgba(0,0,0,.85); }
   #timer-display.warning { color:#ffbc73; }
   #timer-display.danger { color:#ff7078; animation:pulse .8s infinite; }
-  #phase-display { color:var(--muted); font-size:18px; font-weight:900; text-shadow:0 2px 8px rgba(0,0,0,.8); }
-  #tournament-name { color:var(--gold); font-size:16px; font-weight:900; text-shadow:0 2px 8px rgba(0,0,0,.85); }
+  #phase-display { color:var(--muted); font-size:30px; font-weight:900; text-shadow:0 2px 8px rgba(0,0,0,.8); }
+  #tournament-name { color:var(--gold); font-size:26px; font-weight:900; text-shadow:0 2px 8px rgba(0,0,0,.85); }
   .score { position:absolute; left:50%; top:132px; transform:translateX(-50%); display:flex; gap:18px; align-items:center; font-family:'Bebas Neue',sans-serif; font-size:96px; line-height:.8; text-shadow:0 5px 16px rgba(0,0,0,.9); z-index:5; }
   .score .sep { color:var(--gold); }
   .image-side { position:absolute; top:250px; bottom:42px; width:330px; display:grid; grid-template-rows:1fr 1fr; gap:18px; z-index:3; }
@@ -29,8 +29,9 @@
   .image-slot.single { grid-row:1/-1; }
   .image-slot.hidden { display:none; }
   .image-slot img { width:100%; height:100%; object-fit:cover; }
-  #phase-banner { position:absolute; inset:0; display:none; align-items:center; justify-content:center; flex-direction:column; gap:20px; background:rgba(0,0,0,.92); z-index:20; text-align:center; }
+  #phase-banner { position:absolute; left:0; right:0; top:50%; transform:translateY(-50%); min-height:190px; display:none; align-items:center; justify-content:center; flex-direction:column; gap:14px; background:rgba(0,0,0,.78); border-top:2px solid rgba(201,168,76,.58); border-bottom:2px solid rgba(201,168,76,.58); z-index:20; text-align:center; backdrop-filter:blur(2px); }
   #phase-banner.show { display:flex; }
+  #phase-banner.full { inset:0; top:0; transform:none; min-height:auto; background:rgba(0,0,0,.92); border:0; }
   .banner-main { font-size:92px; font-weight:900; letter-spacing:.02em; text-shadow:0 8px 22px rgba(0,0,0,.9); }
   .banner-sub { color:var(--gold2); font-family:'Bebas Neue',sans-serif; font-size:42px; letter-spacing:.12em; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
@@ -123,6 +124,7 @@ function applyPhase(s) {
   const sub = document.getElementById('phase-banner-sub');
   const showBanner = ['sideboarding', 'finished', 'round_waiting', 'judge_call'].includes(phase);
   banner.classList.toggle('show', showBanner);
+  banner.classList.toggle('full', phase === 'finished' || phase === 'round_waiting');
   if (phase === 'finished') {
     main.textContent = '매치 종료';
     sub.textContent = `${s.scoreLeft ?? 0} : ${s.scoreRight ?? 0}`;

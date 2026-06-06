@@ -9,14 +9,14 @@
   :root { --bg:#07080d; --panel:#111521; --panel2:#1b2130; --line:rgba(201,168,76,.26); --gold:#c9a84c; --gold2:#efd36d; --text:#f7f5ee; --muted:rgba(247,245,238,.62); --red:#c93f46; --blue:#326bd4; --green:#2f9d69; --orange:#c96f2d; }
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html, body { margin:0; min-height:100%; background:var(--bg); color:var(--text); font-family:'Noto Sans KR',sans-serif; }
-  body { padding:10px; overflow:auto; overscroll-behavior:none; }
-  .shell { width:min(1180px,100%); min-height:calc(100dvh - 20px); margin:0 auto; display:grid; grid-template-rows:auto 1fr auto; gap:10px; }
-  .topbar { display:grid; grid-template-columns:1fr auto; align-items:center; gap:10px; min-height:42px; }
-  .brand { min-width:0; display:flex; gap:10px; align-items:baseline; overflow:hidden; }
+  body { padding:8px; overflow:auto; overscroll-behavior:none; }
+  .shell { width:min(1180px,100%); min-height:calc(100dvh - 16px); margin:0 auto; display:grid; grid-template-rows:auto 1fr auto; gap:8px; }
+  .topbar { display:grid; grid-template-columns:1fr auto; align-items:center; gap:10px; min-height:40px; }
+  .brand { min-width:0; display:flex; gap:12px; align-items:baseline; overflow:hidden; }
   .brand strong { font-family:'Bebas Neue',sans-serif; color:var(--gold2); font-size:30px; line-height:1; letter-spacing:.06em; }
-  .brand span { color:var(--muted); font-size:13px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .brand span { color:var(--text); font-size:18px; font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .top-actions { display:flex; gap:8px; align-items:center; }
-  .chip { min-height:34px; border:1px solid var(--line); border-radius:999px; padding:7px 10px; color:var(--muted); font-size:12px; font-weight:900; white-space:nowrap; }
+  .chip { min-height:34px; border:1px solid var(--line); border-radius:999px; padding:6px 11px; color:var(--muted); font-size:15px; font-weight:900; white-space:nowrap; }
   .chip.dueling { color:#8be0af; border-color:rgba(47,157,105,.5); }
   .chip.sideboarding { color:#ffbc73; border-color:rgba(201,111,45,.5); }
   .chip.finished, .chip.judge_call { color:#ff9299; border-color:rgba(201,63,70,.55); }
@@ -29,48 +29,49 @@
   .green { background:var(--green); }
   .orange { background:var(--orange); }
   .gold { background:var(--gold); color:#171100; }
-  .judge { min-width:132px; background:var(--red); font-size:17px; }
+  .judge { min-width:126px; background:var(--red); font-size:17px; }
   .judge.active { background:#f04c55; animation:pulse .8s infinite; }
-  .advanced { min-width:82px; }
+  .advanced { min-width:76px; }
   .setup-view { min-height:0; display:grid; grid-template-columns:1fr 1fr; gap:12px; }
   .setup-card { border:1px solid var(--line); border-radius:8px; background:linear-gradient(180deg,#151a27,#0c0f16); display:grid; place-items:center; align-content:center; gap:14px; padding:20px; text-align:center; }
   .setup-side { font-family:'Bebas Neue',sans-serif; color:var(--gold); font-size:clamp(36px,7vw,76px); line-height:.9; }
   .setup-name { max-width:100%; font-size:clamp(24px,4.6vw,48px); font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .setup-hint { color:var(--muted); font-size:clamp(14px,1.8vw,20px); font-weight:900; }
+  .setup-hint { color:#ffbc73; font-size:clamp(14px,1.8vw,20px); font-weight:900; }
   .score-view { min-height:0; display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:center; gap:12px; padding:0 6px; }
   .score-timer { grid-column:1/-1; color:var(--gold2); font-family:'Bebas Neue',sans-serif; font-size:clamp(38px,7.2vw,78px); line-height:.75; text-align:center; letter-spacing:0; }
   .player-name { min-height:28px; color:var(--muted); font-size:clamp(16px,2.2vw,28px); font-weight:900; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .score { font-family:'Bebas Neue',sans-serif; font-size:clamp(130px,28vw,320px); line-height:.72; text-align:center; letter-spacing:0; }
   .colon { font-family:'Bebas Neue',sans-serif; color:var(--gold); font-size:clamp(86px,15vw,180px); line-height:.7; padding-bottom:20px; }
   .dock { background:rgba(17,21,33,.97); border:1px solid var(--line); border-radius:8px; padding:10px; display:grid; gap:8px; }
-  .dock-main { width:100%; min-height:58px; font-size:24px; }
-  .prestart-footer { display:grid; grid-template-columns:1fr auto; gap:10px; align-items:center; }
-  .guide { color:var(--muted); font-size:13px; font-weight:800; line-height:1.4; }
+  .dock-main { width:100%; min-height:64px; font-size:26px; }
+  #prestart-start { min-height:86px; font-size:34px; }
   .toast { min-height:16px; color:var(--muted); text-align:center; font-size:12px; font-weight:800; }
-  .modal-backdrop { position:fixed; inset:0; display:none; align-items:center; justify-content:center; padding:14px; background:rgba(0,0,0,.72); z-index:30; }
+  .modal-backdrop { position:fixed; inset:0; display:none; align-items:flex-start; justify-content:center; padding:10px; background:rgba(0,0,0,.72); z-index:30; overflow:auto; }
   .modal-backdrop.open { display:flex; }
-  .modal { width:min(620px,100%); max-height:calc(100dvh - 28px); overflow:auto; background:#121622; border:1px solid var(--line); border-radius:10px; padding:18px; display:grid; gap:14px; box-shadow:0 20px 60px rgba(0,0,0,.5); }
+  .modal { width:min(620px,100%); max-height:calc(100dvh - 20px); overflow:auto; background:#121622; border:1px solid var(--line); border-radius:10px; padding:16px; display:grid; gap:12px; box-shadow:0 20px 60px rgba(0,0,0,.5); }
   .modal.wide { width:min(820px,100%); }
   .modal-title { display:flex; justify-content:space-between; align-items:center; gap:12px; }
   .modal-title strong { font-size:22px; }
-  .modal-title span { color:var(--muted); font-size:12px; font-weight:800; }
   .field { display:grid; gap:6px; }
   .field label { color:var(--muted); font-size:12px; font-weight:900; }
-  .field input { width:100%; height:50px; border:1px solid var(--line); border-radius:7px; background:var(--panel2); color:var(--text); padding:0 12px; font:inherit; font-size:18px; font-weight:900; outline:none; }
+  .field input { width:100%; height:42px; border:1px solid var(--line); border-radius:7px; background:var(--panel2); color:var(--text); padding:0 12px; font:inherit; font-size:15px; font-weight:900; outline:none; }
   .field input:focus { border-color:var(--gold); }
+  .field-help { color:var(--gold2); font-size:12px; font-weight:900; }
+  .preset-chips { display:flex; flex-wrap:wrap; gap:7px; }
+  .preset-chips button { min-height:34px; padding:0 10px; background:rgba(201,168,76,.16); border:1px solid var(--line); color:var(--gold2); box-shadow:none; }
   .modal-actions, .two-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .three-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
   .winner-button { min-height:92px; font-size:clamp(22px,3vw,34px); white-space:normal; line-height:1.15; padding:10px; }
-  .score-adjust { display:grid; grid-template-columns:1fr auto 1fr; gap:10px; align-items:center; text-align:center; }
-  .score-adjust .num { font-family:'Bebas Neue',sans-serif; font-size:54px; line-height:.9; }
+  .score-adjust { display:grid; gap:10px; }
+  .score-row { display:grid; grid-template-columns:minmax(0,1fr) 54px 78px 54px; gap:8px; align-items:center; }
+  .score-row strong { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:left; font-size:18px; }
+  .score-row .num { font-family:'Bebas Neue',sans-serif; font-size:48px; line-height:.9; text-align:center; }
+  .score-row button { min-height:54px; font-size:26px; }
   .hidden { display:none !important; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.55} }
   @media (max-width:760px) {
-    body { padding:8px; }
-    .shell { min-height:calc(100dvh - 16px); gap:8px; }
     .brand span { display:none; }
     .setup-view { min-height:50dvh; }
-    .prestart-footer { grid-template-columns:1fr; }
     .score { font-size:clamp(110px,27vw,250px); }
     .judge { min-width:108px; font-size:15px; }
   }
@@ -122,30 +123,28 @@
   </section>
 
   <footer class="dock">
-    <div class="prestart-footer" id="prestart-footer">
-      <div class="guide">양쪽 플레이어가 직접 닉네임과 덱 이름을 입력한 뒤 듀얼을 시작합니다. 덱 이름은 방송 화면에 표시되지 않습니다.</div>
+    <div id="prestart-footer">
       <button class="green dock-main" id="prestart-start" onclick="sendAction({action:'start_duel'})">듀얼 시작</button>
     </div>
     <button class="gold dock-main hidden" id="report-open" onclick="openReportModal()">승패 보고</button>
     <button class="green dock-main hidden" id="next-open" onclick="sendAction({action:'start_duel'})">다음 듀얼 시작</button>
-    <button class="orange dock-main hidden" id="prepare-open" onclick="openPrepareModal()">다음 라운드 준비</button>
+    <button class="orange dock-main hidden" id="prepare-open" onclick="sendAction({action:'prepare_next_round'})">다음 라운드 준비</button>
     <div class="toast" id="toast"></div>
   </footer>
 </main>
 
 <div class="modal-backdrop" id="player-modal">
   <div class="modal">
-    <div class="modal-title">
-      <strong id="modal-title">플레이어 설정</strong>
-      <span>덱 이름은 기록과 이미지 프리셋에만 사용됩니다.</span>
-    </div>
+    <div class="modal-title"><strong id="modal-title">플레이어 설정</strong></div>
     <div class="field">
       <label for="modal-name">닉네임</label>
-      <input id="modal-name" type="text" autocomplete="off" placeholder="방송에 표시할 이름">
+      <input id="modal-name" type="text" autocomplete="name" placeholder="방송에 표시할 이름">
     </div>
     <div class="field">
       <label for="modal-deck">덱 이름</label>
-      <input id="modal-deck" type="text" list="deck-preset-list" autocomplete="off" placeholder="자동완성 가능">
+      <input id="modal-deck" type="text" list="deck-preset-list" autocomplete="off" placeholder="덱 이름 입력">
+      <div class="field-help">입력해도 상대에게는 보이지 않습니다.</div>
+      <div class="preset-chips" id="deck-preset-chips"></div>
     </div>
     <div class="modal-actions">
       <button class="ghost" onclick="closePlayerModal()">취소</button>
@@ -156,10 +155,7 @@
 
 <div class="modal-backdrop" id="report-modal">
   <div class="modal wide">
-    <div class="modal-title">
-      <strong>승패 보고</strong>
-      <span>세트가 끝났을 때 승자를 선택합니다.</span>
-    </div>
+    <div class="modal-title"><strong>승패 보고</strong></div>
     <div class="two-grid">
       <button class="blue winner-button" id="report-left-win" onclick="reportWinner('left')">왼쪽 승</button>
       <button class="red winner-button" id="report-right-win" onclick="reportWinner('right')">오른쪽 승</button>
@@ -173,53 +169,34 @@
 
 <div class="modal-backdrop" id="advanced-modal">
   <div class="modal wide">
-    <div class="modal-title">
-      <strong>고급</strong>
-      <span>현장 실수 보정과 자투리 기능</span>
-    </div>
+    <div class="modal-title"><strong>고급</strong></div>
     <div class="three-grid">
       <button class="ghost" onclick="requestFullscreenMode()">전체화면</button>
       <button class="ghost" onclick="sendAction({action:'undo'})">마지막 보고 취소</button>
       <button class="ghost" onclick="loadState()">새로고침</button>
     </div>
     <div class="two-grid">
-      <button class="ghost" id="adv-left-edit" onclick="openPlayerModal('left')">왼쪽 정보 수정</button>
-      <button class="ghost" id="adv-right-edit" onclick="openPlayerModal('right')">오른쪽 정보 수정</button>
+      <button class="ghost" id="adv-left-edit" onclick="openPlayerModal('left')">왼쪽 플레이어 정보 수정</button>
+      <button class="ghost" id="adv-right-edit" onclick="openPlayerModal('right')">오른쪽 플레이어 정보 수정</button>
     </div>
-    <div>
-      <div class="guide" style="margin-bottom:8px;">수동 승패 조절</div>
-      <div class="score-adjust">
-        <div>
-          <button class="ghost" onclick="adjustManualScore('left', 1)">+</button>
-          <div class="num" id="manual-left-score">0</div>
-          <button class="ghost" onclick="adjustManualScore('left', -1)">-</button>
-        </div>
-        <div class="colon">:</div>
-        <div>
-          <button class="ghost" onclick="adjustManualScore('right', 1)">+</button>
-          <div class="num" id="manual-right-score">0</div>
-          <button class="ghost" onclick="adjustManualScore('right', -1)">-</button>
-        </div>
+    <div class="score-adjust">
+      <div class="score-row">
+        <strong id="manual-left-name">왼쪽</strong>
+        <button class="ghost" onclick="adjustManualScore('left', -1)">-</button>
+        <div class="num" id="manual-left-score">0</div>
+        <button class="ghost" onclick="adjustManualScore('left', 1)">+</button>
       </div>
-      <button class="blue" style="width:100%;margin-top:10px;" onclick="applyManualScore()">수동 점수 반영</button>
+      <div class="score-row">
+        <strong id="manual-right-name">오른쪽</strong>
+        <button class="ghost" onclick="adjustManualScore('right', -1)">-</button>
+        <div class="num" id="manual-right-score">0</div>
+        <button class="ghost" onclick="adjustManualScore('right', 1)">+</button>
+      </div>
+      <button class="blue" onclick="applyManualScore()">수동 점수 반영</button>
     </div>
     <div class="modal-actions">
       <button class="ghost" onclick="closeAdvancedModal()">닫기</button>
       <button class="red" onclick="sendAction({action:'finish_match'}); closeAdvancedModal();">매치 강제 종료</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-backdrop" id="prepare-modal">
-  <div class="modal">
-    <div class="modal-title">
-      <strong>다음 라운드 준비</strong>
-      <span>점수와 플레이어 입력을 초기화합니다.</span>
-    </div>
-    <div class="guide">덱 프리셋과 룰 설정은 유지하고, 닉네임/덱/스코어는 다음 라운드를 위해 비웁니다.</div>
-    <div class="modal-actions">
-      <button class="ghost" onclick="closePrepareModal()">취소</button>
-      <button class="orange" onclick="prepareNextRound()">초기화하고 준비</button>
     </div>
   </div>
 </div>
@@ -253,11 +230,9 @@ function setToast(message, isError = false) {
   clearTimeout(el._timer);
   if (message) el._timer = setTimeout(() => { el.textContent = ''; }, 1800);
 }
-
 function isPrestart(s) {
   return ['idle', 'round_waiting'].includes(s.phase || 'idle') && (s.scoreLeft ?? 0) === 0 && (s.scoreRight ?? 0) === 0;
 }
-
 function formatTimer(seconds) {
   const value = Math.floor(seconds || 0);
   if (value < 0 && state?.extraTurnSeconds > 0) {
@@ -270,18 +245,15 @@ function formatTimer(seconds) {
   const total = Math.abs(value);
   return `${sign}${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
 }
-
 function parseStateTime(value) {
   const timestamp = Date.parse(value || '');
   return Number.isFinite(timestamp) ? timestamp : Date.now();
 }
-
 function updateTimerDisplay() {
   const running = state?.timerRunning;
   const elapsed = running ? Math.floor((Date.now() - timerBaseAt) / 1000) : 0;
   $('score-timer').textContent = formatTimer(timerBaseSeconds - elapsed);
 }
-
 function render(s) {
   state = s;
   const phase = s.phase || 'idle';
@@ -289,27 +261,22 @@ function render(s) {
   timerBaseSeconds = s.timerSeconds ?? s.mainTimerSeconds ?? 2400;
   timerBaseAt = s.timerRunning ? parseStateTime(s.updatedAt || s.duelStartedAt) : Date.now();
   updateTimerDisplay();
-
   $('match-title').textContent = s.tournamentName || '방송 테이블';
   $('phase').textContent = prestart ? '경기 전 설정' : `${phaseLabels[phase] || phaseLabels.idle} · ${s.currentSet || 1}세트`;
   $('phase').className = 'chip ' + phase;
   $('judge-button').textContent = phase === 'judge_call' ? '저지 복귀' : '저지 호출';
   $('judge-button').classList.toggle('active', phase === 'judge_call');
-
   $('setup-view').classList.toggle('hidden', !prestart);
   $('score-view').classList.toggle('hidden', prestart);
   $('prestart-footer').classList.toggle('hidden', !prestart);
-
   renderSetupCard('left', s.p1Name, s.p1Deck);
   renderSetupCard('right', s.p2Name, s.p2Deck);
-
   const leftName = s.p1Name || '왼쪽';
   const rightName = s.p2Name || '오른쪽';
   $('left-name').textContent = leftName;
   $('right-name').textContent = rightName;
   $('left-score').textContent = s.scoreLeft ?? 0;
   $('right-score').textContent = s.scoreRight ?? 0;
-
   const isDueling = phase === 'dueling';
   const isSideboarding = phase === 'sideboarding';
   const isFinished = phase === 'finished';
@@ -319,13 +286,14 @@ function render(s) {
   $('prepare-open').classList.toggle('hidden', !isFinished);
   $('report-left-win').textContent = `${leftName} 승`;
   $('report-right-win').textContent = `${rightName} 승`;
-  $('adv-left-edit').textContent = `${leftName} 정보 수정`;
-  $('adv-right-edit').textContent = `${rightName} 정보 수정`;
+  $('adv-left-edit').textContent = '왼쪽 플레이어 정보 수정';
+  $('adv-right-edit').textContent = '오른쪽 플레이어 정보 수정';
+  $('manual-left-name').textContent = leftName;
+  $('manual-right-name').textContent = rightName;
   manualScoreLeft = s.scoreLeft ?? 0;
   manualScoreRight = s.scoreRight ?? 0;
   renderManualScore();
 }
-
 function renderSetupCard(side, name, deck) {
   $(`${side}-setup-name`).textContent = name || '터치해서 설정';
   const hint = $(`${side}-setup-hint`);
@@ -337,7 +305,6 @@ function renderSetupCard(side, name, deck) {
     hint.style.color = '#ffbc73';
   }
 }
-
 function openPlayerModal(side) {
   closeReportModal();
   closeAdvancedModal();
@@ -348,27 +315,23 @@ function openPlayerModal(side) {
   $('modal-title').textContent = name ? `${name} 정보 수정` : (isLeft ? '왼쪽 플레이어 설정' : '오른쪽 플레이어 설정');
   $('modal-name').value = isLeft ? (state?.p1Name || '') : (state?.p2Name || '');
   $('modal-deck').value = isLeft ? (state?.p1Deck || '') : (state?.p2Deck || '');
+  renderDeckPresetChips();
   $('player-modal').classList.add('open');
-  setTimeout(() => $('modal-name').focus(), 0);
 }
 function closePlayerModal() { $('player-modal').classList.remove('open'); modalSide = null; }
 function openReportModal() { $('report-modal').classList.add('open'); }
 function closeReportModal() { $('report-modal').classList.remove('open'); }
 function openAdvancedModal() { manualScoreLeft = state?.scoreLeft || 0; manualScoreRight = state?.scoreRight || 0; renderManualScore(); $('advanced-modal').classList.add('open'); }
 function closeAdvancedModal() { $('advanced-modal').classList.remove('open'); }
-function openPrepareModal() { $('prepare-modal').classList.add('open'); }
-function closePrepareModal() { $('prepare-modal').classList.remove('open'); }
-
 async function requestFullscreenMode() {
   try {
     if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
     if (screen.orientation?.lock) screen.orientation.lock('landscape').catch(() => {});
     setToast('전체화면 전환됨');
   } catch (e) {
-    setToast('브라우저가 전체화면을 막았습니다. 홈 화면에 추가해서 실행하면 상단 표시줄을 줄일 수 있습니다.', true);
+    setToast('브라우저가 전체화면을 막았습니다.', true);
   }
 }
-
 async function savePlayerSetup() {
   if (!state || !modalSide || busy) return;
   const nextState = { ...state };
@@ -395,15 +358,8 @@ async function savePlayerSetup() {
     if (state) render(state);
   }
 }
-
 async function loadState() {
-  if (
-    busy ||
-    $('player-modal').classList.contains('open') ||
-    $('report-modal').classList.contains('open') ||
-    $('advanced-modal').classList.contains('open') ||
-    $('prepare-modal').classList.contains('open')
-  ) return;
+  if (busy || $('player-modal').classList.contains('open') || $('report-modal').classList.contains('open') || $('advanced-modal').classList.contains('open')) return;
   try {
     const res = await fetch('/api/state?_=' + Date.now());
     render(await res.json());
@@ -411,20 +367,29 @@ async function loadState() {
     setToast('연결 없음', true);
   }
 }
-
 async function loadDeckPresets() {
   try {
     const res = await fetch('/api/deck-presets?_=' + Date.now());
     const result = await res.json();
     deckPresets = result.presets || [];
     $('deck-preset-list').innerHTML = deckPresets.map(p => `<option value="${escapeHtml(p.deckName)}"></option>`).join('');
+    renderDeckPresetChips();
   } catch (e) {}
 }
-
+function renderDeckPresetChips() {
+  const el = $('deck-preset-chips');
+  if (!el) return;
+  el.innerHTML = deckPresets.slice(0, 8).map(p => `<button type="button" onclick="selectDeckPreset('${escapeJs(p.deckName)}')">${escapeHtml(p.deckName)}</button>`).join('');
+}
+function selectDeckPreset(name) {
+  $('modal-deck').value = name;
+}
 function escapeHtml(value) {
   return String(value || '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 }
-
+function escapeJs(value) {
+  return String(value || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
 async function sendAction(payload) {
   if (busy) return;
   busy = true;
@@ -442,9 +407,7 @@ async function sendAction(payload) {
     if (state) render(state);
   }
 }
-
 function reportWinner(winner) { closeReportModal(); sendAction({ action:'set_win', winner }); }
-function prepareNextRound() { closePrepareModal(); sendAction({ action:'prepare_next_round' }); }
 function toggleJudgeCall() { sendAction({ action:'toggle_judge_call' }); }
 function adjustManualScore(side, delta) {
   if (side === 'left') manualScoreLeft = Math.max(0, manualScoreLeft + delta);
@@ -458,14 +421,11 @@ function renderManualScore() {
 function applyManualScore() {
   sendAction({ action:'set_score', scoreLeft:manualScoreLeft, scoreRight:manualScoreRight });
 }
-
 $('player-modal').addEventListener('click', e => { if (e.target.id === 'player-modal') closePlayerModal(); });
 $('report-modal').addEventListener('click', e => { if (e.target.id === 'report-modal') closeReportModal(); });
 $('advanced-modal').addEventListener('click', e => { if (e.target.id === 'advanced-modal') closeAdvancedModal(); });
-$('prepare-modal').addEventListener('click', e => { if (e.target.id === 'prepare-modal') closePrepareModal(); });
 $('modal-name').addEventListener('keydown', e => { if (e.key === 'Enter') $('modal-deck').focus(); });
 $('modal-deck').addEventListener('keydown', e => { if (e.key === 'Enter') savePlayerSetup(); });
-
 loadState();
 loadDeckPresets();
 setInterval(loadState, 800);
