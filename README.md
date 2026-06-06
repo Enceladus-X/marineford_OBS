@@ -1,54 +1,92 @@
-# Marineford OBS Overlay
+# Marineford OBS
 
-TCG 매장 방송 송출용 OBS 브라우저 오버레이입니다. 운영자는 `control.html`에서 선수명, 점수, 타이머, 이미지를 조작하고, OBS는 `overlay.html`을 브라우저 소스로 읽어 실시간으로 표시합니다.
+TCG 매장 방송 송출을 보조하는 로컬 웹 패널입니다. 송출컴에서 서버를 켜고, OBS는 오버레이 화면을 브라우저 소스로 읽으며, 태블릿은 QR 코드로 접속해 듀얼 진행 상태와 승패 보고를 조작합니다.
 
-## 실행
+## 빠른 실행
 
-```powershell
-python server.py
-```
+### 릴리스 EXE 사용
 
-현장에서는 `start_marineford.bat`을 더블클릭하면 서버를 켜고 송출컴 패널을 자동으로 엽니다.
-송출컴 패널에 표시되는 QR 코드를 태블릿으로 스캔하면 태블릿 패널에 바로 접속할 수 있습니다.
+1. GitHub Releases에서 `Marineford_OBS_v1.0.exe`를 다운로드합니다.
+2. 송출컴의 원하는 폴더에 EXE를 둡니다.
+3. EXE를 더블클릭합니다.
+4. 자동으로 열리는 송출용 패널에서 태블릿 연결 QR을 스캔합니다.
 
-GitHub ZIP 또는 릴리스 파일로 받은 경우에는 압축을 먼저 푼 뒤 `start_marineford.bat`을 실행합니다. 압축 파일 안에서 바로 실행하면 이미지와 상태 파일 경로가 꼬일 수 있습니다.
+EXE 옆에는 실행 중 `state.json`, `events.jsonl`, `images/`가 생성될 수 있습니다. 현장 상태와 업로드 이미지 저장용 파일이므로 정상 동작입니다.
 
-서버가 켜지면 아래 주소를 사용합니다.
+### 소스 ZIP 사용
 
-- 컨트롤 패널: http://localhost:8000/control.html
-- 태블릿 패널: http://localhost:8000/tablet.html
-- 편집 보조 패널: http://localhost:8000/editor.html
-- OBS 오버레이: http://localhost:8000/overlay.html
-- 상태 API: http://localhost:8000/api/state
+1. GitHub ZIP 또는 릴리스 소스 파일을 다운로드합니다.
+2. 압축을 먼저 풉니다.
+3. `start_marineford.bat`을 더블클릭합니다.
+4. 송출용 패널에 표시되는 QR을 태블릿으로 스캔합니다.
 
-OBS 브라우저 소스 설정은 URL `http://localhost:8000/overlay.html`, 너비 `1920`, 높이 `1080`을 기준으로 합니다.
+압축 파일 안에서 바로 실행하면 이미지와 상태 파일 경로가 꼬일 수 있으니 반드시 압축을 푼 뒤 실행하세요.
 
-태블릿은 송출 PC와 같은 Wi-Fi에 연결한 뒤 `http://송출PC_IP:8000/tablet.html`로 접속합니다.
+## 화면 구성
+
+- 송출용 패널: `http://127.0.0.1:8000/control.html`
+- 태블릿 패널: `http://송출컴_IP:8000/tablet.html`
+- OBS 오버레이: `http://127.0.0.1:8000/overlay.html`
+- 편집 보조: `http://127.0.0.1:8000/editor.html`
+
+운영 화면은 기본적으로 송출용 패널과 태블릿 패널 두 개로 관리합니다. 태블릿 접속 QR은 송출용 패널 안에 표시됩니다.
+
+## OBS 설정
+
+OBS 브라우저 소스에 아래 값을 사용합니다.
+
+- URL: `http://127.0.0.1:8000/overlay.html`
+- 너비: `1920`
+- 높이: `1080`
+
+송출컴에서 EXE 또는 배치파일을 끄면 OBS 오버레이도 갱신되지 않습니다. 방송 중에는 서버 창을 유지하세요.
+
+## 현장 운영 흐름
+
+1. 송출컴에서 `Marineford_OBS_v1.0.exe` 또는 `start_marineford.bat`을 실행합니다.
+2. 송출용 패널에서 대회명, 선수 이미지, OBS용 표시 요소를 세팅합니다.
+3. 태블릿으로 송출용 패널의 QR을 스캔합니다.
+4. 경기 시작 전 양쪽 플레이어가 태블릿에서 닉네임과 덱 이름을 입력합니다.
+5. `듀얼 시작`을 누르면 OBS 화면과 편집 로그의 기준점이 자동으로 잡힙니다.
+6. 세트 종료 시 `승패 보고`에서 승자를 선택합니다.
+7. 사이드덱 교체 후 `다음 듀얼 시작`을 누릅니다.
+8. 매치 종료 후 `다음 라운드 준비`를 누르면 점수, 상태, 닉네임, 덱 이름이 초기화됩니다.
+
+덱 이름은 경기 중 태블릿 점수 화면과 OBS 오버레이에 표시되지 않습니다.
+
+## 편집 보조
+
+태블릿 조작 기록은 `events.jsonl`에 저장됩니다. 편집 보조 화면에서 듀얼 구간, 챕터 초안, ffmpeg 명령 초안을 확인할 수 있습니다.
+
+- 듀얼 구간 CSV: `/api/export/cuts.csv`
+- 유튜브 챕터 초안: `/api/export/chapters.txt`
+- ffmpeg 명령 초안: `/api/export/ffmpeg.txt`
 
 ## 파일 구성
 
-- `server.py`: 로컬 HTTP 서버, 상태 API, 태블릿 액션, 이벤트 로그, 이미지 업로드 처리
-- `control.html`: 방송 운영자용 컨트롤 패널, 태블릿 접속용 QR 표시
-- `tablet.html`: 현장 태블릿용 세트 스코어/듀얼 상태 패널
-- `editor.html`: 듀얼 구간 확인 및 편집 보조 export 패널
+- `server.py`: 로컬 HTTP 서버, 상태 API, QR 생성, 태블릿 액션, 편집 로그
+- `control.html`: 송출용 패널, 태블릿 QR, 방송 설정
+- `tablet.html`: 현장 태블릿용 듀얼 진행 패널
 - `overlay.html`: OBS 브라우저 소스용 오버레이
-- `images/`: 방송 이미지 에셋
-- `state.example.json`: 새 상태 파일 예시
-- `인수인계서.md`: 운영 인수인계 문서
+- `editor.html`: 편집 보조 패널
+- `start_marineford.bat`: 소스 ZIP 실행용 Windows 배치파일
+- `build_release.ps1`: 릴리스 EXE 빌드 스크립트
+- `images/`: 기본 방송 이미지 에셋
+- `state.example.json`: 초기 상태 예시
 
-`state.json`과 `events.jsonl`은 실행 중 자동 생성되는 런타임 파일이라 Git에는 올리지 않습니다. 상태를 초기화하려면 서버를 끈 뒤 두 파일을 삭제하고 다시 실행하면 됩니다.
+## 직접 빌드
 
-## 태블릿 액션 흐름
+개발 PC에서 PyInstaller로 단일 EXE를 만들 수 있습니다.
 
-- 경기 시작 전: 각 플레이어가 태블릿의 좌/우 패널을 터치해 닉네임과 덱 이름을 입력합니다. 덱 이름은 경기 중 패널과 OBS 오버레이에 표시되지 않습니다.
-- `듀얼 시작`: 현재 세트를 `dueling` 상태로 바꾸고, 첫 시작이라면 편집 export 기준점도 자동으로 기록합니다.
-- `승패 보고`: 세트가 끝났을 때 승자를 선택합니다. 버튼에는 좌/우 대신 입력한 닉네임이 표시됩니다.
-- `마지막 보고 취소`: 마지막 태블릿 이벤트를 되돌립니다.
-- `다음 듀얼 시작`: 사이드덱 교체 후 다음 세트 시작점을 기록합니다.
-- `다음 라운드 준비`: 매치 종료 후 점수와 듀얼 상태를 초기화하고, 이전 플레이어의 닉네임과 덱 이름을 비워 새 착석 입력 화면으로 돌아갑니다.
+```powershell
+powershell -ExecutionPolicy Bypass -File .\build_release.ps1
+```
 
-## 편집 export
+빌드 결과는 `dist/Marineford_OBS_v1.0.exe`에 생성됩니다.
 
-- `/api/export/cuts.csv`: 듀얼 구간 목록
-- `/api/export/chapters.txt`: 유튜브 챕터 초안
-- `/api/export/ffmpeg.txt`: 원본 녹화 파일에서 듀얼 구간만 자르는 ffmpeg 명령 초안
+## 문제 해결
+
+- 태블릿 접속이 안 되면 태블릿과 송출컴이 같은 Wi-Fi 또는 같은 공유기에 연결되어 있는지 확인합니다.
+- Windows 방화벽 알림이 뜨면 Python 또는 Marineford 실행 파일의 개인 네트워크 접근을 허용합니다.
+- QR의 IP가 맞지 않으면 송출컴에서 `ipconfig`를 실행해 IPv4 주소를 확인합니다.
+- 8000 포트가 이미 사용 중이면 기존 Marineford 서버 창을 닫거나 해당 프로그램을 종료한 뒤 다시 실행합니다.

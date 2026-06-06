@@ -3,15 +3,38 @@ import io
 import json
 import os
 import socket
+import sys
+import threading
 import uuid
+import webbrowser
 from datetime import datetime
 from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
-STATE_FILE = "state.json"
-EVENTS_FILE = "events.jsonl"
 PORT = 8000
+
+
+def is_packaged():
+    return bool(getattr(sys, "frozen", False))
+
+
+def asset_dir():
+    if is_packaged():
+        return getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(sys.executable)))
+    return os.path.dirname(os.path.abspath(__file__))
+
+
+def data_dir():
+    if is_packaged():
+        return os.path.dirname(os.path.abspath(sys.executable))
+    return asset_dir()
+
+
+ASSET_DIR = asset_dir()
+DATA_DIR = data_dir()
+STATE_FILE = os.path.join(DATA_DIR, "state.json")
+EVENTS_FILE = os.path.join(DATA_DIR, "events.jsonl")
 
 MATCH_FIELDS = [
     "matchId",
@@ -592,6 +615,19 @@ def build_ffmpeg_notes(segments, state):
 
 
 class Handler(SimpleHTTPRequestHandler):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, directory=ASSET_DIR, **kwargs)
+
+    def translate_path(self, path):
+        parsed = urlparse(path)
+        clean_path = parsed.path.lstrip("/").replace("/", os.sep)
+        if clean_path.startswith("images" + os.sep):
+            runtime_path = os.path.abspath(os.path.join(DATA_DIR, clean_path))
+            runtime_images = os.path.abspath(os.path.join(DATA_DIR, "images"))
+            if runtime_path.startswith(runtime_images) and os.path.exists(runtime_path):
+                return runtime_path
+        return super().translate_path(path)
+
     def send_json(self, data, status=HTTPStatus.OK):
         body = json.dumps(data, ensure_ascii=False).encode("utf-8")
         self.send_response(status)
@@ -739,8 +775,8 @@ class Handler(SimpleHTTPRequestHandler):
 
                 if filename and file_data:
                     filename = os.path.basename(filename.replace("\\", "/")).strip()
-                    os.makedirs("images", exist_ok=True)
-                    save_path = os.path.join("images", filename)
+                    os.makedirs(os.path.join(DATA_DIR, "images"), exist_ok=True)
+                    save_path = os.path.join(DATA_DIR, "images", filename)
                     with open(save_path, "wb") as f:
                         f.write(file_data)
                     saved_filename = "images/" + filename
@@ -765,8 +801,8 @@ class Handler(SimpleHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    os.makedirs("images", exist_ok=True)
+    os.chdir(DATA_DIR)
+    os.makedirs(os.path.join(DATA_DIR, "images"), exist_ok=True)
     if not os.path.exists(STATE_FILE):
         write_state(DEFAULT_STATE.copy())
 
@@ -778,4 +814,8 @@ if __name__ == "__main__":
     print(f"  tablet  : http://{lan_ip}:{port}/tablet.html")
     print(f"  editor  : http://localhost:{port}/editor.html")
     print("  stop    : Ctrl+C")
+
+    if is_packaged():
+        threading.Timer(0.8, lambda: webbrowser.open(f"http://127.0.0.1:{port}/control.html")).start()
+
     ThreadingHTTPServer(("", port), Handler).serve_forever()
