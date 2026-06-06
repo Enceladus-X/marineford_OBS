@@ -221,27 +221,31 @@ def apply_action(payload):
         write_events(events)
         return write_state(state), {"ok": True, "state": state, "undone": last}
 
-    elif action == "reset_match":
+    elif action in {"reset_match", "prepare_next_round"}:
         keep = {
-            key: state.get(key, "")
-            for key in (
-                "p1Name",
-                "p1Deck",
-                "p2Name",
-                "p2Deck",
-                "tournamentName",
-                "roundName",
-                "leftImg1",
-                "leftImg2",
-                "rightImg1",
-                "rightImg2",
-                "p1CardImg",
-                "p2CardImg",
-            )
+            "tournamentName": state.get("tournamentName", ""),
+            "matchTarget": state.get("matchTarget", DEFAULT_STATE["matchTarget"]),
         }
         state = normalize_state(keep)
-        state.update({"matchId": new_match_id(), "updatedAt": timestamp})
-        event = {"type": "match_reset", "time": timestamp}
+        state.update(
+            {
+                "matchId": new_match_id(),
+                "phase": "idle",
+                "currentSet": 1,
+                "scoreLeft": 0,
+                "scoreRight": 0,
+                "timerSeconds": DEFAULT_STATE["timerSeconds"],
+                "timerRunning": False,
+                "duelStartedAt": "",
+                "duelEndedAt": "",
+                "recordingStartedAt": "",
+                "updatedAt": timestamp,
+            }
+        )
+        event = {
+            "type": "next_round_prepare" if action == "prepare_next_round" else "match_reset",
+            "time": timestamp,
+        }
 
     elif action == "finish_match":
         state.update({"phase": "finished", "timerRunning": False, "updatedAt": timestamp})

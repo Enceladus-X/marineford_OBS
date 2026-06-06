@@ -56,6 +56,7 @@
   .match-dock { background:rgba(16,19,28,.96); border:1px solid var(--line); border-radius:10px; padding:12px; box-shadow:0 -10px 30px rgba(0,0,0,.28); }
   .report-open { width:100%; min-height:64px; font-size:24px; background:var(--gold); color:#191300; }
   .next-open { width:100%; min-height:64px; font-size:24px; background:var(--green); }
+  .prepare-open { width:100%; min-height:64px; font-size:24px; background:var(--orange); }
 
   button { min-height:42px; border:0; border-radius:7px; color:#fff; font-family:'Noto Sans KR',sans-serif; font-size:15px; font-weight:900; cursor:pointer; box-shadow:inset 0 -2px 0 rgba(0,0,0,.22); white-space:nowrap; }
   button:active { transform:translateY(1px); }
@@ -147,6 +148,7 @@
   <footer class="match-dock hidden" id="match-dock">
     <button class="report-open" id="report-open" onclick="openReportModal()">승패 보고</button>
     <button class="next-open hidden" id="next-open" onclick="sendAction({action:'start_duel'})">다음 듀얼 시작</button>
+    <button class="prepare-open hidden" id="prepare-open" onclick="openPrepareModal()">다음 라운드 준비</button>
     <div class="toast" id="toast"></div>
   </footer>
 </main>
@@ -190,6 +192,22 @@
     <div class="modal-actions">
       <button class="ghost" onclick="closeReportModal()">닫기</button>
       <button class="orange" id="finish-match" onclick="sendAction({action:'finish_match'}); closeReportModal();">매치 종료</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="prepare-modal">
+  <div class="modal">
+    <div class="modal-title">
+      <strong>다음 라운드 준비</strong>
+      <span>현재 매치를 닫고 새 착석 입력 화면으로 돌아갑니다.</span>
+    </div>
+    <div style="color:var(--muted);font-size:15px;font-weight:800;line-height:1.55;">
+      세트 스코어, 듀얼 상태, 닉네임, 덱 이름을 초기화합니다. 덱 이름은 기록에서 노출되지 않도록 새 라운드 입력 전까지 비워둡니다.
+    </div>
+    <div class="modal-actions">
+      <button class="ghost" onclick="closePrepareModal()">취소</button>
+      <button class="orange" id="prepare-confirm" onclick="prepareNextRound()">초기화하고 준비</button>
     </div>
   </div>
 </div>
@@ -257,8 +275,10 @@ function render(s) {
   $('prestart-start').disabled = busy || !s.p1Name || !s.p1Deck || !s.p2Name || !s.p2Deck;
   $('report-open').classList.toggle('hidden', !isDueling);
   $('next-open').classList.toggle('hidden', !isSideboarding);
+  $('prepare-open').classList.toggle('hidden', !isFinished);
   $('report-open').disabled = busy || !isDueling;
   $('next-open').disabled = busy || !isSideboarding;
+  $('prepare-open').disabled = busy || !isFinished;
   $('report-left-win').textContent = `${leftName} 승`;
   $('report-right-win').textContent = `${rightName} 승`;
   $('report-left-edit').textContent = `${leftName} 정보 수정`;
@@ -266,6 +286,7 @@ function render(s) {
   $('report-left-win').disabled = busy || !isDueling;
   $('report-right-win').disabled = busy || !isDueling;
   $('finish-match').disabled = busy || isFinished;
+  $('prepare-confirm').disabled = busy || !isFinished;
 }
 
 function renderSetupCard(side, name, deck) {
@@ -311,6 +332,19 @@ function closeReportModal() {
   $('report-modal').classList.remove('open');
 }
 
+function openPrepareModal() {
+  $('prepare-modal').classList.add('open');
+}
+
+function closePrepareModal() {
+  $('prepare-modal').classList.remove('open');
+}
+
+function prepareNextRound() {
+  closePrepareModal();
+  sendAction({ action: 'prepare_next_round' });
+}
+
 function reportWinner(winner) {
   closeReportModal();
   sendAction({ action: 'set_win', winner });
@@ -352,7 +386,12 @@ async function savePlayerSetup() {
 }
 
 async function loadState() {
-  if (busy || $('player-modal').classList.contains('open') || $('report-modal').classList.contains('open')) return;
+  if (
+    busy ||
+    $('player-modal').classList.contains('open') ||
+    $('report-modal').classList.contains('open') ||
+    $('prepare-modal').classList.contains('open')
+  ) return;
   try {
     const res = await fetch('/api/state?_=' + Date.now());
     const next = await res.json();
@@ -392,6 +431,9 @@ $('player-modal').addEventListener('click', (event) => {
 });
 $('report-modal').addEventListener('click', (event) => {
   if (event.target.id === 'report-modal') closeReportModal();
+});
+$('prepare-modal').addEventListener('click', (event) => {
+  if (event.target.id === 'prepare-modal') closePrepareModal();
 });
 $('modal-name').addEventListener('keydown', (event) => {
   if (event.key === 'Enter') $('modal-deck').focus();
