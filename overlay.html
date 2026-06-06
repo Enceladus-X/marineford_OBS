@@ -89,6 +89,13 @@
     letter-spacing: 0.06em;
     transition: color 0.5s;
   }
+  #phase-display {
+    margin-top: 4px;
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 18px;
+    color: #c9a84c;
+    letter-spacing: 0.08em;
+  }
   #timer-display.warning { color: #ff9900; }
   #timer-display.danger  { color: #ff3333; animation: pulse 0.8s infinite; }
 
@@ -198,7 +205,33 @@
   /* 우측 여백 (대칭) */
   #score-right-pad { width: 560px; }
 
-
+  #phase-banner {
+    position: absolute;
+    left: 240px;
+    right: 240px;
+    top: 100px;
+    bottom: 90px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 20px;
+    background: rgba(0,0,0,0.72);
+    z-index: 20;
+  }
+  #phase-banner.show { display: flex; }
+  #phase-banner .banner-main {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 78px;
+    color: #fff;
+    letter-spacing: 0.04em;
+  }
+  #phase-banner .banner-sub {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 44px;
+    color: #c9a84c;
+    letter-spacing: 0.08em;
+  }
 
   @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 </style>
@@ -220,6 +253,7 @@
   <!-- 중앙 타이머 -->
   <div id="center-top">
     <div id="timer-display">40:00</div>
+    <div id="phase-display">대기중 · 1세트</div>
   </div>
 
   <!-- 플레이어 2 (우) -->
@@ -270,6 +304,11 @@
   </div>
 </div>
 
+<div id="phase-banner">
+  <div class="banner-main" id="phase-banner-main">사이드덱 교체중</div>
+  <div class="banner-sub" id="phase-banner-sub">NEXT SET READY</div>
+</div>
+
 <script>
 let remainingSeconds = 2400;
 let timerRunning = false;
@@ -293,7 +332,33 @@ function applyState(s) {
     if (s.timerRunning && !timerRunning) startTimer();
     else if (!s.timerRunning && timerRunning) stopTimer();
   }
+  applyPhase(s);
   applyImages(s);
+}
+
+function applyPhase(s) {
+  const phase = s.phase || 'idle';
+  const labels = {
+    idle: '대기중',
+    dueling: '듀얼중',
+    sideboarding: '사이드덱 교체중',
+    finished: '매치 종료'
+  };
+  const setNumber = s.currentSet || 1;
+  document.getElementById('phase-display').textContent = `${labels[phase] || labels.idle} · ${setNumber}세트`;
+
+  const banner = document.getElementById('phase-banner');
+  const main = document.getElementById('phase-banner-main');
+  const sub = document.getElementById('phase-banner-sub');
+  const showBanner = phase === 'sideboarding' || phase === 'finished';
+  banner.classList.toggle('show', showBanner);
+  if (phase === 'finished') {
+    main.textContent = '매치 종료';
+    sub.textContent = `${s.scoreLeft ?? 0} : ${s.scoreRight ?? 0}`;
+  } else {
+    main.textContent = '사이드덱 교체중';
+    sub.textContent = 'NEXT SET READY';
+  }
 }
 
 function setCardImg(imgId, wrapId, src) {

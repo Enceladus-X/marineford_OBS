@@ -14,5 +14,13 @@
   "rightImg1": "",
   "rightImg2": "",
   "p1CardImg": "",
-  "p2CardImg": ""
+  "p2CardImg": "",
+  "matchId": "",
+  "phase": "idle",
+  "currentSet": 1,
+  "matchTarget": 2,
+  "duelStartedAt": "",
+  "duelEndedAt": "",
+  "recordingStartedAt": "",
+  "updatedAt": ""
 }
