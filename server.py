@@ -773,7 +773,6 @@ if __name__ == "__main__":
     port = PORT
     lan_ip = get_lan_ip()
     print(f"[Marineford] server: http://localhost:{port}")
-    print(f"  connect : http://localhost:{port}/connect.html")
     print(f"  overlay : http://localhost:{port}/overlay.html")
     print(f"  control : http://localhost:{port}/control.html")
     print(f"  tablet  : http://{lan_ip}:{port}/tablet.html")

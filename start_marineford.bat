@@ -59,14 +59,13 @@ if defined PORT_PID (
   ) else (
     echo [OK] Server is ready.
     echo.
-    start "" "http://127.0.0.1:%PORT%/connect.html"
+    start "" "http://127.0.0.1:%PORT%/control.html"
   )
 )
 
 echo ------------------------------------------------------------
 echo  On the streaming PC
 echo ------------------------------------------------------------
-echo  QR connect    : http://127.0.0.1:%PORT%/connect.html
 echo  Control panel : http://127.0.0.1:%PORT%/control.html
 echo  OBS overlay   : http://127.0.0.1:%PORT%/overlay.html
 echo  Editor helper : http://127.0.0.1:%PORT%/editor.html
@@ -75,6 +74,7 @@ echo ------------------------------------------------------------
 echo  On the tablet
 echo ------------------------------------------------------------
 echo  Tablet panel  : http://%LAN_IP%:%PORT%/tablet.html
+echo  Scan the QR code shown in the Control panel.
 echo.
 echo If the tablet cannot connect:
 echo  1. Put the tablet and streaming PC on the same Wi-Fi/router.

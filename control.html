@@ -66,6 +66,15 @@
   .apply-bar { display:flex; gap:12px; align-items:center; justify-content:flex-end; margin-bottom:16px; max-width:960px; margin-left:auto; margin-right:auto; }
   .divider { height:1px; background:var(--border); margin:14px 0; }
   .score-reset-row { display:flex; justify-content:center; margin-top:14px; }
+  .tablet-connect { display:grid; grid-template-columns:220px 1fr; gap:18px; align-items:center; }
+  .tablet-qr-wrap { background:#fff; border-radius:8px; padding:12px; display:grid; place-items:center; min-height:220px; }
+  .tablet-qr-wrap img { width:100%; max-width:196px; aspect-ratio:1; display:block; }
+  .tablet-url { background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:12px; color:var(--text); font-size:18px; font-weight:900; overflow-wrap:anywhere; }
+  .tablet-connect-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+  .tablet-connect-help { margin-top:10px; color:var(--text-dim); font-size:12px; line-height:1.55; }
+  @media (max-width:720px) {
+    .tablet-connect { grid-template-columns:1fr; }
+  }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.45} }
 </style>
 </head>
@@ -90,6 +99,26 @@
       <div class="card-title">📋 대회 정보</div>
       <label>대회명</label>
       <input type="text" id="tournamentName" oninput="push()">
+    </div>
+
+    <div class="card full">
+      <div class="card-title">📱 태블릿 연결</div>
+      <div class="tablet-connect">
+        <div class="tablet-qr-wrap">
+          <img id="tabletQr" alt="태블릿 연결 QR">
+        </div>
+        <div>
+          <label>태블릿에서 열 주소</label>
+          <div class="tablet-url" id="tabletUrlText">주소 확인 중...</div>
+          <div class="tablet-connect-actions">
+            <button class="btn btn-gold" type="button" onclick="loadTabletConnection()">QR 새로고침</button>
+            <button class="btn btn-outline" type="button" onclick="openTabletPanel()">태블릿 패널 열기</button>
+          </div>
+          <div class="tablet-connect-help" id="tabletConnectStatus">
+            태블릿과 송출컴을 같은 Wi-Fi 또는 같은 공유기에 연결한 뒤 QR을 스캔하세요.
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="card">
@@ -229,6 +258,31 @@
 <script>
 let state = { p1Name:'', p1Deck:'', p2Name:'', p2Deck:'', tournamentName:'', roundName:'', scoreLeft:0, scoreRight:0, timerSeconds:2400, timerRunning:false, leftImg1:'', leftImg2:'', rightImg1:'', rightImg2:'', p1CardImg:'', p2CardImg:'' };
 let timerInterval = null, timerRunning = false, remainingSeconds = 2400, defaultSeconds = 2400;
+let tabletUrl = '';
+
+async function loadTabletConnection() {
+  const urlText = document.getElementById('tabletUrlText');
+  const status = document.getElementById('tabletConnectStatus');
+  const qr = document.getElementById('tabletQr');
+  if (!urlText || !status || !qr) return;
+
+  status.textContent = '태블릿 연결 정보를 불러오는 중입니다.';
+  try {
+    const res = await fetch('/api/connect-info?_=' + Date.now());
+    const info = await res.json();
+    tabletUrl = info.tabletUrl;
+    urlText.textContent = tabletUrl;
+    qr.src = '/api/qr.svg?text=' + encodeURIComponent(tabletUrl) + '&_=' + Date.now();
+    status.textContent = `${info.host}:${info.port} 로 태블릿을 연결합니다. 카메라로 QR을 스캔하세요.`;
+  } catch (e) {
+    urlText.textContent = '주소 확인 실패';
+    status.textContent = '연결 정보를 불러오지 못했습니다. 서버 창을 확인하세요.';
+  }
+}
+
+function openTabletPanel() {
+  if (tabletUrl) window.open(tabletUrl, '_blank', 'noopener,noreferrer');
+}
 
 // ── 서버 통신 ──
 async function push() {
@@ -389,6 +443,8 @@ function resetAll() {
 }
 
 loadState();
+loadTabletConnection();
+setInterval(loadTabletConnection, 10000);
 updateTimerUI();
 </script>
 </body>
