@@ -49,6 +49,7 @@
   .primary-start { min-width:220px; min-height:66px; font-size:24px; background:var(--green); }
 
   .score-view { min-height:0; display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:center; gap:20px; padding:10px 8px 4px; }
+  .score-timer { grid-column:1/-1; color:var(--gold2); font-family:'Bebas Neue',sans-serif; font-size:clamp(42px,8vw,92px); line-height:.8; text-align:center; letter-spacing:0; }
   .side { min-width:0; height:100%; display:grid; grid-template-rows:auto 1fr; align-items:center; text-align:center; }
   .player-name { width:100%; min-height:38px; color:var(--muted); font-size:clamp(18px,2.6vw,32px); font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .score { font-family:'Bebas Neue',sans-serif; font-size:clamp(180px,34vw,390px); line-height:.76; letter-spacing:0; }
@@ -129,6 +130,7 @@
   </section>
 
   <section class="score-view hidden" id="score-view">
+    <div class="score-timer" id="score-timer">40:00</div>
     <div class="side">
       <div class="player-name" id="left-name">왼쪽</div>
       <div class="score" id="left-score">0</div>
@@ -165,7 +167,7 @@
     </div>
     <div class="field">
       <label for="modal-deck">덱 이름</label>
-      <input id="modal-deck" type="text" autocomplete="off" placeholder="편집/운영 기록용">
+      <input id="modal-deck" type="text" list="deck-preset-list" autocomplete="off" placeholder="편집/운영 기록용">
     </div>
     <div class="modal-actions">
       <button class="ghost" onclick="closePlayerModal()">닫기</button>
@@ -212,13 +214,19 @@
   </div>
 </div>
 
+<datalist id="deck-preset-list"></datalist>
+
 <script>
 let state = null;
 let busy = false;
 let modalSide = null;
+let deckPresets = [];
+let timerBaseSeconds = 2400;
+let timerBaseAt = Date.now();
 
 const phaseLabels = {
   idle: '대기중',
+  round_waiting: '다음 라운드 대기중',
   dueling: '듀얼중',
   sideboarding: '사이드덱 교체중',
   finished: '매치 종료'
@@ -243,13 +251,34 @@ function updateConn(ok) {
 }
 
 function isPrestart(s) {
-  return (s.phase || 'idle') === 'idle' && (s.scoreLeft ?? 0) === 0 && (s.scoreRight ?? 0) === 0;
+  return ['idle', 'round_waiting'].includes(s.phase || 'idle') && (s.scoreLeft ?? 0) === 0 && (s.scoreRight ?? 0) === 0;
+}
+
+function formatTimer(seconds) {
+  const total = Math.max(0, Math.floor(seconds || 0));
+  const minutes = String(Math.floor(total / 60)).padStart(2, '0');
+  const secs = String(total % 60).padStart(2, '0');
+  return `${minutes}:${secs}`;
+}
+
+function updateTimerDisplay() {
+  const running = state?.timerRunning;
+  const elapsed = running ? Math.floor((Date.now() - timerBaseAt) / 1000) : 0;
+  $('score-timer').textContent = formatTimer(timerBaseSeconds - elapsed);
+}
+
+function parseStateTime(value) {
+  const timestamp = Date.parse(value || '');
+  return Number.isFinite(timestamp) ? timestamp : Date.now();
 }
 
 function render(s) {
   state = s;
   const phase = s.phase || 'idle';
   const prestart = isPrestart(s);
+  timerBaseSeconds = s.timerSeconds ?? 2400;
+  timerBaseAt = s.timerRunning ? parseStateTime(s.updatedAt || s.duelStartedAt) : Date.now();
+  updateTimerDisplay();
   $('match-title').textContent = s.tournamentName || s.roundName || '방송 테이블';
   $('phase').textContent = prestart ? '경기 전 설정' : `${phaseLabels[phase] || phaseLabels.idle} · ${s.currentSet || 1}세트`;
   $('phase').className = 'phase-chip ' + phase;
@@ -307,6 +336,7 @@ function renderSetupCard(side, name, deck) {
 
 function openPlayerModal(side) {
   closeReportModal();
+  loadDeckPresets();
   modalSide = side;
   const isLeft = side === 'left';
   const currentName = isLeft ? state?.p1Name : state?.p2Name;
@@ -402,6 +432,27 @@ async function loadState() {
   }
 }
 
+async function loadDeckPresets() {
+  try {
+    const res = await fetch('/api/deck-presets?_=' + Date.now());
+    const result = await res.json();
+    deckPresets = result.presets || [];
+    $('deck-preset-list').innerHTML = deckPresets
+      .map((preset) => `<option value="${escapeHtml(preset.deckName)}"></option>`)
+      .join('');
+  } catch (e) {}
+}
+
+function escapeHtml(value) {
+  return String(value || '').replace(/[&<>"']/g, (ch) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  })[ch]);
+}
+
 async function sendAction(payload) {
   if (busy) return;
   busy = true;
@@ -443,7 +494,9 @@ $('modal-deck').addEventListener('keydown', (event) => {
 });
 
 loadState();
+loadDeckPresets();
 setInterval(loadState, 800);
+setInterval(updateTimerDisplay, 250);
 </script>
 </body>
 </html>

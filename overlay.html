@@ -207,16 +207,13 @@
 
   #phase-banner {
     position: absolute;
-    left: 240px;
-    right: 240px;
-    top: 100px;
-    bottom: 90px;
+    inset: 0;
     display: none;
     align-items: center;
     justify-content: center;
     flex-direction: column;
     gap: 20px;
-    background: rgba(0,0,0,0.72);
+    background: rgba(0,0,0,0.92);
     z-index: 20;
   }
   #phase-banner.show { display: flex; }
@@ -340,6 +337,7 @@ function applyPhase(s) {
   const phase = s.phase || 'idle';
   const labels = {
     idle: '대기중',
+    round_waiting: '다음 라운드 대기중',
     dueling: '듀얼중',
     sideboarding: '사이드덱 교체중',
     finished: '매치 종료'
@@ -350,13 +348,16 @@ function applyPhase(s) {
   const banner = document.getElementById('phase-banner');
   const main = document.getElementById('phase-banner-main');
   const sub = document.getElementById('phase-banner-sub');
-  const showBanner = phase === 'sideboarding' || phase === 'finished';
+  const showBanner = phase === 'sideboarding' || phase === 'finished' || phase === 'round_waiting';
   banner.classList.toggle('show', showBanner);
   if (phase === 'finished') {
     main.textContent = '매치 종료';
     sub.textContent = `${s.scoreLeft ?? 0} : ${s.scoreRight ?? 0}`;
+  } else if (phase === 'round_waiting') {
+    main.textContent = '다음 라운드 대기중';
+    sub.textContent = 'WAITING FOR NEXT ROUND';
   } else {
-    main.textContent = '사이드덱 교체중';
+    main.textContent = '사이드 교체중';
     sub.textContent = 'NEXT SET READY';
   }
 }

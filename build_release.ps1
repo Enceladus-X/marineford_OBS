@@ -3,7 +3,7 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $root
 
-$version = "1.0"
+$version = "1.1"
 $exeName = "Marineford_OBS_v$version"
 
 if (-not (Get-Command py -ErrorAction SilentlyContinue) -and -not (Get-Command python -ErrorAction SilentlyContinue)) {
@@ -20,6 +20,11 @@ if ($LASTEXITCODE -ne 0) {
   Invoke-Expression "$python -m pip install pyinstaller"
 }
 
+Invoke-Expression "$python -m pip show qrcode *> `$null"
+if ($LASTEXITCODE -ne 0) {
+  Invoke-Expression "$python -m pip install `"qrcode[pil]`""
+}
+
 Remove-Item -LiteralPath "$root\build" -Recurse -Force -ErrorAction SilentlyContinue
 Remove-Item -LiteralPath "$root\dist" -Recurse -Force -ErrorAction SilentlyContinue
 Remove-Item -LiteralPath "$root\$exeName.spec" -Force -ErrorAction SilentlyContinue
@@ -30,6 +35,7 @@ $pyInstallerArgs = @(
   "--clean",
   "--onefile",
   "--name", $exeName,
+  "--hidden-import", "qrcode.image.svg",
   "--add-data", "control.html;.",
   "--add-data", "tablet.html;.",
   "--add-data", "overlay.html;.",

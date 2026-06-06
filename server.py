@@ -12,6 +12,9 @@ from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
+import qrcode
+import qrcode.image.svg
+
 PORT = 8000
 
 
@@ -35,6 +38,7 @@ ASSET_DIR = asset_dir()
 DATA_DIR = data_dir()
 STATE_FILE = os.path.join(DATA_DIR, "state.json")
 EVENTS_FILE = os.path.join(DATA_DIR, "events.jsonl")
+PRESETS_FILE = os.path.join(DATA_DIR, "deck_presets.json")
 
 MATCH_FIELDS = [
     "matchId",
@@ -125,7 +129,7 @@ def normalize_state(data):
     state["matchTarget"] = max(1, state["matchTarget"])
     state["timerRunning"] = bool(state.get("timerRunning", False))
 
-    if state.get("phase") not in {"idle", "dueling", "sideboarding", "finished"}:
+    if state.get("phase") not in {"idle", "round_waiting", "dueling", "sideboarding", "finished"}:
         state["phase"] = "idle"
 
     return state
@@ -141,9 +145,87 @@ def read_state():
 
 def write_state(data):
     state = normalize_state(data)
+    state = apply_deck_presets_to_state(state)
+    save_deck_presets_from_state(state)
     with open(STATE_FILE, "w", encoding="utf-8") as f:
         json.dump(state, f, ensure_ascii=False, indent=2)
     return state
+
+
+def normalize_deck_name(name):
+    return str(name or "").strip()
+
+
+def read_deck_presets():
+    if not os.path.exists(PRESETS_FILE):
+        return {}
+    try:
+        with open(PRESETS_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception:
+        return {}
+    if not isinstance(data, dict):
+        return {}
+    presets = {}
+    for name, preset in data.items():
+        deck_name = normalize_deck_name(name)
+        if not deck_name or not isinstance(preset, dict):
+            continue
+        presets[deck_name] = {
+            "deckName": deck_name,
+            "image1": str(preset.get("image1", "") or ""),
+            "image2": str(preset.get("image2", "") or ""),
+            "updatedAt": str(preset.get("updatedAt", "") or ""),
+        }
+    return presets
+
+
+def write_deck_presets(presets):
+    with open(PRESETS_FILE, "w", encoding="utf-8") as f:
+        json.dump(presets, f, ensure_ascii=False, indent=2)
+
+
+def apply_deck_presets_to_state(state):
+    presets = read_deck_presets()
+    sides = (
+        ("p1Deck", "leftImg1", "leftImg2"),
+        ("p2Deck", "rightImg1", "rightImg2"),
+    )
+    for deck_key, image1_key, image2_key in sides:
+        preset = presets.get(normalize_deck_name(state.get(deck_key)))
+        if not preset:
+            continue
+        if not state.get(image1_key):
+            state[image1_key] = preset.get("image1", "")
+        if not state.get(image2_key):
+            state[image2_key] = preset.get("image2", "")
+    return state
+
+
+def save_deck_presets_from_state(state):
+    presets = read_deck_presets()
+    changed = False
+    sides = (
+        ("p1Deck", "leftImg1", "leftImg2"),
+        ("p2Deck", "rightImg1", "rightImg2"),
+    )
+    for deck_key, image1_key, image2_key in sides:
+        deck_name = normalize_deck_name(state.get(deck_key))
+        image1 = str(state.get(image1_key, "") or "").strip()
+        image2 = str(state.get(image2_key, "") or "").strip()
+        if not deck_name or not image1 or not image2:
+            continue
+        next_preset = {
+            "deckName": deck_name,
+            "image1": image1,
+            "image2": image2,
+            "updatedAt": now_iso(),
+        }
+        if presets.get(deck_name) != next_preset:
+            presets[deck_name] = next_preset
+            changed = True
+    if changed:
+        write_deck_presets(presets)
 
 
 def read_events():
@@ -275,7 +357,7 @@ def apply_action(payload):
         state.update(
             {
                 "matchId": new_match_id(),
-                "phase": "idle",
+                "phase": "round_waiting" if action == "prepare_next_round" else "idle",
                 "currentSet": 1,
                 "scoreLeft": 0,
                 "scoreRight": 0,
@@ -338,6 +420,21 @@ def format_hms(total_seconds):
 
 
 def qr_svg(text, scale=10, border=4):
+    qr = qrcode.QRCode(
+        version=None,
+        error_correction=qrcode.constants.ERROR_CORRECT_M,
+        box_size=scale,
+        border=border,
+        image_factory=qrcode.image.svg.SvgPathImage,
+    )
+    qr.add_data(text)
+    qr.make(fit=True)
+    image = qr.make_image(attrib={"class": "qr"})
+    data = image.to_string(encoding="unicode")
+    return data
+
+
+def legacy_qr_svg(text, scale=10, border=4):
     matrix = build_qr_matrix(text.encode("ascii"))
     size = len(matrix)
     parts = [
@@ -676,6 +773,10 @@ class Handler(SimpleHTTPRequestHandler):
                 }
             )
             return
+        if path == "/api/deck-presets":
+            presets = read_deck_presets()
+            self.send_json({"presets": sorted(presets.values(), key=lambda item: item["deckName"].casefold())})
+            return
         if path == "/api/qr.svg":
             query = parse_qs(parsed.query)
             text = query.get("text", [""])[0]
@@ -725,6 +826,29 @@ class Handler(SimpleHTTPRequestHandler):
             try:
                 _, response = apply_action(self.read_json_body())
                 self.send_json(response)
+            except Exception as e:
+                self.send_json({"ok": False, "error": str(e)}, HTTPStatus.BAD_REQUEST)
+            return
+
+        if path == "/api/deck-presets":
+            try:
+                payload = self.read_json_body()
+                deck_name = normalize_deck_name(payload.get("deckName"))
+                image1 = str(payload.get("image1", "") or "").strip()
+                image2 = str(payload.get("image2", "") or "").strip()
+                if not deck_name:
+                    raise ValueError("deckName is required")
+                if not image1 or not image2:
+                    raise ValueError("image1 and image2 are required")
+                presets = read_deck_presets()
+                presets[deck_name] = {
+                    "deckName": deck_name,
+                    "image1": image1,
+                    "image2": image2,
+                    "updatedAt": now_iso(),
+                }
+                write_deck_presets(presets)
+                self.send_json({"ok": True, "presets": sorted(presets.values(), key=lambda item: item["deckName"].casefold())})
             except Exception as e:
                 self.send_json({"ok": False, "error": str(e)}, HTTPStatus.BAD_REQUEST)
             return

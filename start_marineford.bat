@@ -37,6 +37,19 @@ if not defined PY_CMD (
   exit /b 1
 )
 
+%PY_CMD% -m pip show qrcode >nul 2>nul
+if errorlevel 1 (
+  echo [INFO] Installing Python requirements...
+  %PY_CMD% -m pip install -r requirements.txt
+  if errorlevel 1 (
+    echo [ERROR] Failed to install Python requirements.
+    echo Use the GitHub Release EXE if this PC has no internet access.
+    echo.
+    pause
+    exit /b 1
+  )
+)
+
 set "LAN_IP=127.0.0.1"
 for /f "usebackq delims=" %%I in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "$ip='127.0.0.1'; foreach($cfg in Get-NetIPConfiguration){ if($cfg.IPv4Address -and $cfg.NetAdapter.Status -eq 'Up'){ foreach($addr in $cfg.IPv4Address){ if($addr.IPAddress -and $addr.IPAddress -notlike '169.254*' -and $addr.IPAddress -ne '127.0.0.1'){ $ip=$addr.IPAddress; break } } } if($ip -ne '127.0.0.1'){ break } }; $ip"`) do set "LAN_IP=%%I"
 

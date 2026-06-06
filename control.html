@@ -124,6 +124,7 @@
     <div class="card">
       <div class="card-title">🔵 플레이어 1 (좌측)</div>
       <label>닉네임</label><input type="text" id="p1Name" oninput="push()">
+      <label>덱 이름</label><input type="text" id="p1Deck" list="deckPresetList" oninput="push()" onchange="applyDeckPreset('left')">
       <div class="img-slot-ctrl" style="margin-top:14px;">
         <div class="img-slot-label">명함 이미지</div>
         <div class="img-preview-wrap" style="height:70px;" onclick="triggerFile('p1card-file')">
@@ -140,6 +141,7 @@
     <div class="card">
       <div class="card-title">🔴 플레이어 2 (우측)</div>
       <label>닉네임</label><input type="text" id="p2Name" oninput="push()">
+      <label>덱 이름</label><input type="text" id="p2Deck" list="deckPresetList" oninput="push()" onchange="applyDeckPreset('right')">
       <div class="img-slot-ctrl" style="margin-top:14px;">
         <div class="img-slot-label">명함 이미지</div>
         <div class="img-preview-wrap" style="height:70px;" onclick="triggerFile('p2card-file')">
@@ -177,6 +179,7 @@
         </div>
         <input type="file" id="lp2-file" accept="image/*" onchange="onFile(this,'leftImg2','lp2-preview','lp2-ph')">
       </div>
+      <div class="score-reset-row"><button class="btn btn-outline" onclick="saveDeckPreset('left')">좌측 덱 프리셋 저장</button></div>
     </div>
 
     <div class="card">
@@ -203,6 +206,7 @@
         </div>
         <input type="file" id="rp2-file" accept="image/*" onchange="onFile(this,'rightImg2','rp2-preview','rp2-ph')">
       </div>
+      <div class="score-reset-row"><button class="btn btn-outline" onclick="saveDeckPreset('right')">우측 덱 프리셋 저장</button></div>
     </div>
 
     <div class="card">
@@ -253,12 +257,14 @@
 
   </div>
   <div id="status-bar">✓ 오버레이 업데이트됨</div>
+  <datalist id="deckPresetList"></datalist>
 </div>
 
 <script>
 let state = { p1Name:'', p1Deck:'', p2Name:'', p2Deck:'', tournamentName:'', roundName:'', scoreLeft:0, scoreRight:0, timerSeconds:2400, timerRunning:false, leftImg1:'', leftImg2:'', rightImg1:'', rightImg2:'', p1CardImg:'', p2CardImg:'' };
 let timerInterval = null, timerRunning = false, remainingSeconds = 2400, defaultSeconds = 2400;
 let tabletUrl = '';
+let deckPresets = [];
 
 async function loadTabletConnection() {
   const urlText = document.getElementById('tabletUrlText');
@@ -284,10 +290,84 @@ function openTabletPanel() {
   if (tabletUrl) window.open(tabletUrl, '_blank', 'noopener,noreferrer');
 }
 
+async function loadDeckPresets() {
+  try {
+    const res = await fetch('/api/deck-presets?_=' + Date.now());
+    const result = await res.json();
+    deckPresets = result.presets || [];
+    const list = document.getElementById('deckPresetList');
+    if (list) {
+      list.innerHTML = deckPresets
+        .map((preset) => `<option value="${escapeHtml(preset.deckName)}"></option>`)
+        .join('');
+    }
+  } catch (e) {}
+}
+
+function escapeHtml(value) {
+  return String(value || '').replace(/[&<>"']/g, (ch) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  })[ch]);
+}
+
+function findDeckPreset(deckName) {
+  const name = String(deckName || '').trim().toLowerCase();
+  return deckPresets.find((preset) => preset.deckName.toLowerCase() === name);
+}
+
+function applyDeckPreset(side) {
+  const isLeft = side === 'left';
+  const deckInput = document.getElementById(isLeft ? 'p1Deck' : 'p2Deck');
+  const preset = findDeckPreset(deckInput?.value);
+  if (!preset) return;
+  const image1Key = isLeft ? 'leftImg1' : 'rightImg1';
+  const image2Key = isLeft ? 'leftImg2' : 'rightImg2';
+  const preview1 = isLeft ? ['lp1-preview', 'lp1-ph'] : ['rp1-preview', 'rp1-ph'];
+  const preview2 = isLeft ? ['lp2-preview', 'lp2-ph'] : ['rp2-preview', 'rp2-ph'];
+  setInputValue(image1Key, preset.image1);
+  setInputValue(image2Key, preset.image2);
+  state[image1Key] = preset.image1;
+  state[image2Key] = preset.image2;
+  setPreview(preview1[0], preview1[1], preset.image1);
+  setPreview(preview2[0], preview2[1], preset.image2);
+  push();
+}
+
+async function saveDeckPreset(side) {
+  const isLeft = side === 'left';
+  const deckName = document.getElementById(isLeft ? 'p1Deck' : 'p2Deck').value.trim();
+  const image1 = document.getElementById(isLeft ? 'leftImg1' : 'rightImg1').value.trim();
+  const image2 = document.getElementById(isLeft ? 'leftImg2' : 'rightImg2').value.trim();
+  if (!deckName || !image1 || !image2) {
+    showStatus('⚠ 덱 이름과 이미지 2장을 모두 입력하세요', true);
+    return;
+  }
+  try {
+    const res = await fetch('/api/deck-presets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ deckName, image1, image2 })
+    });
+    const result = await res.json();
+    if (!result.ok) throw new Error(result.error || 'preset save failed');
+    deckPresets = result.presets || [];
+    await loadDeckPresets();
+    showStatus('✓ 덱 이미지 프리셋 저장됨', false);
+  } catch (e) {
+    showStatus('⚠ 덱 프리셋 저장 실패', true);
+  }
+}
+
 // ── 서버 통신 ──
 async function push() {
   state.p1Name = document.getElementById('p1Name').value;
+  state.p1Deck = document.getElementById('p1Deck').value;
   state.p2Name = document.getElementById('p2Name').value;
+  state.p2Deck = document.getElementById('p2Deck').value;
   state.tournamentName = document.getElementById('tournamentName').value;
   state.timerSeconds = remainingSeconds;
   state.timerRunning = timerRunning;
@@ -310,7 +390,9 @@ async function loadState() {
     const s = await res.json();
     state = { ...state, ...s };
     setInputValue('p1Name', s.p1Name);
+    setInputValue('p1Deck', s.p1Deck);
     setInputValue('p2Name', s.p2Name);
+    setInputValue('p2Deck', s.p2Deck);
     setInputValue('tournamentName', s.tournamentName);
     setInputValue('p1CardImg', s.p1CardImg);
     setInputValue('p2CardImg', s.p2CardImg);
@@ -435,7 +517,7 @@ function resetAll() {
   if (!confirm('모든 정보를 초기화할까요?')) return;
   stopTimer(); remainingSeconds=2400; defaultSeconds=2400;
   state = { p1Name:'', p1Deck:'', p2Name:'', p2Deck:'', tournamentName:'', roundName:'', scoreLeft:0, scoreRight:0, timerSeconds:2400, timerRunning:false, leftImg1:'', leftImg2:'', rightImg1:'', rightImg2:'', p1CardImg:'', p2CardImg:'' };
-  ['p1Name','p2Name','tournamentName','p1CardImg','p2CardImg','leftImg1','leftImg2','rightImg1','rightImg2'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  ['p1Name','p1Deck','p2Name','p2Deck','tournamentName','p1CardImg','p2CardImg','leftImg1','leftImg2','rightImg1','rightImg2'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
   ['lp1-preview','lp2-preview','rp1-preview','rp2-preview','p1card-preview','p2card-preview'].forEach((p,i) => { const phs=['lp1-ph','lp2-ph','rp1-ph','rp2-ph','p1card-ph','p2card-ph']; setPreview(p,phs[i],''); });
   document.getElementById('scoreL').textContent=0; document.getElementById('scoreR').textContent=0;
   document.getElementById('startStopBtn').textContent='▶ 시작'; document.getElementById('startStopBtn').className='btn btn-success';
@@ -444,6 +526,7 @@ function resetAll() {
 
 loadState();
 loadTabletConnection();
+loadDeckPresets();
 setInterval(loadTabletConnection, 10000);
 updateTimerUI();
 </script>
