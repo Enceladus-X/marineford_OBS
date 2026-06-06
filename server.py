@@ -352,6 +352,7 @@ def apply_action(payload):
             {
                 "phase": "dueling",
                 "currentSet": max(1, next_set),
+                "timerSeconds": state.get("mainTimerSeconds", DEFAULT_STATE["mainTimerSeconds"]),
                 "duelStartedAt": timestamp,
                 "duelEndedAt": "",
                 "timerRunning": True,

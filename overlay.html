@@ -5,33 +5,30 @@
 <title>Marineford OBS Overlay</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
 <style>
-  :root { --gold:#c9a84c; --gold2:#efd36d; --text:#f7f4ea; --muted:rgba(247,244,234,.62); --red:#d94b52; --blue:#4078dd; }
+  :root { --gold:#c9a84c; --gold2:#efd36d; --text:#f7f4ea; --muted:rgba(247,244,234,.62); }
   * { box-sizing:border-box; }
   body { margin:0; width:100vw; height:100vh; overflow:hidden; background:transparent; color:var(--text); font-family:'Noto Sans KR',sans-serif; }
   .overlay { position:relative; width:1920px; height:1080px; transform-origin:top left; background:transparent; }
-  .top { position:absolute; left:52px; right:52px; top:34px; display:grid; grid-template-columns:1fr auto 1fr; gap:28px; align-items:start; z-index:5; }
-  .player { min-width:0; display:grid; grid-template-columns:96px 1fr; gap:14px; align-items:center; }
-  .player.right { grid-template-columns:1fr 96px; text-align:right; }
-  .card-img { width:96px; height:96px; border:2px solid rgba(201,168,76,.5); border-radius:8px; background:rgba(8,9,14,.72); display:grid; place-items:center; overflow:hidden; }
-  .card-img.empty { opacity:.35; }
-  .card-img img { max-width:100%; max-height:100%; object-fit:contain; display:none; }
-  .name { min-width:0; font-size:38px; font-weight:900; line-height:1.05; text-shadow:0 3px 10px rgba(0,0,0,.8); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .scoreline { color:var(--muted); font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:.08em; margin-top:4px; }
-  .center { display:grid; justify-items:center; gap:4px; min-width:260px; }
+  .top { position:absolute; left:50px; right:50px; top:20px; display:grid; grid-template-columns:minmax(0,1fr) 320px minmax(0,1fr); gap:32px; align-items:start; z-index:6; }
+  .player { min-width:0; padding-top:8px; }
+  .player.right { text-align:right; }
+  .name { min-width:0; font-size:58px; font-weight:900; line-height:1; text-shadow:0 4px 14px rgba(0,0,0,.9); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .scoreline { color:var(--gold); font-family:'Bebas Neue',sans-serif; font-size:24px; letter-spacing:.12em; margin-top:8px; text-shadow:0 3px 10px rgba(0,0,0,.85); }
+  .center { display:grid; justify-items:center; gap:4px; min-width:320px; }
   #timer-display { font-family:'Bebas Neue',sans-serif; color:var(--gold2); font-size:68px; line-height:.9; letter-spacing:0; text-shadow:0 4px 12px rgba(0,0,0,.85); }
   #timer-display.warning { color:#ffbc73; }
   #timer-display.danger { color:#ff7078; animation:pulse .8s infinite; }
   #phase-display { color:var(--muted); font-size:18px; font-weight:900; text-shadow:0 2px 8px rgba(0,0,0,.8); }
   #tournament-name { color:var(--gold); font-size:16px; font-weight:900; text-shadow:0 2px 8px rgba(0,0,0,.85); }
-  .score { position:absolute; left:50%; top:136px; transform:translateX(-50%); display:flex; gap:18px; align-items:center; font-family:'Bebas Neue',sans-serif; font-size:92px; line-height:.8; text-shadow:0 5px 14px rgba(0,0,0,.86); z-index:4; }
+  .score { position:absolute; left:50%; top:132px; transform:translateX(-50%); display:flex; gap:18px; align-items:center; font-family:'Bebas Neue',sans-serif; font-size:96px; line-height:.8; text-shadow:0 5px 16px rgba(0,0,0,.9); z-index:5; }
   .score .sep { color:var(--gold); }
-  .image-side { position:absolute; top:180px; bottom:42px; width:310px; display:grid; grid-template-rows:1fr 1fr; gap:18px; z-index:3; }
+  .image-side { position:absolute; top:250px; bottom:42px; width:330px; display:grid; grid-template-rows:1fr 1fr; gap:18px; z-index:3; }
   .image-side.left { left:42px; }
   .image-side.right { right:42px; }
-  .image-slot { border:2px solid rgba(201,168,76,.35); border-radius:10px; background:rgba(8,9,14,.62); overflow:hidden; display:grid; place-items:center; }
+  .image-slot { border:2px solid rgba(201,168,76,.38); border-radius:10px; background:rgba(8,9,14,.62); overflow:hidden; display:grid; place-items:center; }
   .image-slot.single { grid-row:1/-1; }
   .image-slot.hidden { display:none; }
-  .image-slot img { width:100%; height:100%; object-fit:contain; }
+  .image-slot img { width:100%; height:100%; object-fit:cover; }
   #phase-banner { position:absolute; inset:0; display:none; align-items:center; justify-content:center; flex-direction:column; gap:20px; background:rgba(0,0,0,.92); z-index:20; text-align:center; }
   #phase-banner.show { display:flex; }
   .banner-main { font-size:92px; font-weight:900; letter-spacing:.02em; text-shadow:0 8px 22px rgba(0,0,0,.9); }
@@ -43,8 +40,8 @@
 <div class="overlay" id="overlay">
   <div class="top">
     <div class="player">
-      <div class="card-img empty" id="p1-card-wrap"><img id="p1-card-img" alt=""></div>
-      <div><div class="name" id="p1-name"></div><div class="scoreline">PLAYER 1</div></div>
+      <div class="name" id="p1-name"></div>
+      <div class="scoreline">PLAYER 1</div>
     </div>
     <div class="center">
       <div id="timer-display">40:00</div>
@@ -52,8 +49,8 @@
       <div id="tournament-name"></div>
     </div>
     <div class="player right">
-      <div><div class="name" id="p2-name"></div><div class="scoreline">PLAYER 2</div></div>
-      <div class="card-img empty" id="p2-card-wrap"><img id="p2-card-img" alt=""></div>
+      <div class="name" id="p2-name"></div>
+      <div class="scoreline">PLAYER 2</div>
     </div>
   </div>
 
@@ -81,6 +78,7 @@ let remainingSeconds = 2400;
 let timerRunning = false;
 let timerInterval = null;
 let lastState = null;
+window.lastOverlayState = null;
 
 function scaleOverlay() {
   const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
@@ -96,8 +94,6 @@ function applyState(s) {
   document.getElementById('tournament-name').textContent = s.tournamentName || '';
   document.getElementById('score-left').textContent = s.scoreLeft ?? 0;
   document.getElementById('score-right').textContent = s.scoreRight ?? 0;
-  setCardImg('p1-card-img', 'p1-card-wrap', s.p1CardImg || '');
-  setCardImg('p2-card-img', 'p2-card-wrap', s.p2CardImg || '');
   if (s.timerSeconds !== undefined) {
     remainingSeconds = s.timerSeconds;
     updateTimerDisplay();
@@ -140,13 +136,6 @@ function applyPhase(s) {
     main.textContent = '사이드 교체중';
     sub.textContent = 'NEXT SET READY';
   }
-}
-
-function setCardImg(imgId, wrapId, src) {
-  const img = document.getElementById(imgId);
-  const wrap = document.getElementById(wrapId);
-  if (src) { img.src = src; img.style.display = 'block'; wrap.classList.remove('empty'); }
-  else { img.src = ''; img.style.display = 'none'; wrap.classList.add('empty'); }
 }
 
 function applyImages(s) {
