@@ -2,14 +2,16 @@ import csv
 import io
 import json
 import os
+import socket
 import uuid
 from datetime import datetime
 from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 STATE_FILE = "state.json"
 EVENTS_FILE = "events.jsonl"
+PORT = 8000
 
 MATCH_FIELDS = [
     "matchId",
@@ -61,6 +63,26 @@ def now_iso():
 def new_match_id():
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     return f"match-{stamp}-{uuid.uuid4().hex[:6]}"
+
+
+def get_lan_ip():
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.connect(("8.8.8.8", 80))
+            ip = s.getsockname()[0]
+            if ip and not ip.startswith("127."):
+                return ip
+    except OSError:
+        pass
+
+    try:
+        for ip in socket.gethostbyname_ex(socket.gethostname())[2]:
+            if ip and not ip.startswith("127.") and not ip.startswith("169.254."):
+                return ip
+    except OSError:
+        pass
+
+    return "127.0.0.1"
 
 
 def normalize_state(data):
@@ -292,6 +314,206 @@ def format_hms(total_seconds):
     return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
 
 
+def qr_svg(text, scale=10, border=4):
+    matrix = build_qr_matrix(text.encode("ascii"))
+    size = len(matrix)
+    parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {size + border * 2} {size + border * 2}" shape-rendering="crispEdges">',
+        '<rect width="100%" height="100%" fill="#fff"/>',
+    ]
+    for y, row in enumerate(matrix):
+        x = 0
+        while x < size:
+            if not row[x]:
+                x += 1
+                continue
+            start = x
+            while x < size and row[x]:
+                x += 1
+            parts.append(f'<rect x="{start + border}" y="{y + border}" width="{x - start}" height="1" fill="#000"/>')
+    parts.append("</svg>")
+    return "\n".join(parts)
+
+
+def build_qr_matrix(data):
+    # Fixed QR Version 3-L is enough for the local tablet URL and keeps the
+    # generator dependency-free for field PCs.
+    version = 3
+    size = 17 + version * 4
+    data_codewords = 55
+    ecc_codewords = 15
+    if len(data) > 53:
+        raise ValueError("QR text is too long")
+
+    bits = [0, 1, 0, 0]
+    bits.extend([(len(data) >> i) & 1 for i in range(7, -1, -1)])
+    for byte in data:
+        bits.extend([(byte >> i) & 1 for i in range(7, -1, -1)])
+
+    capacity = data_codewords * 8
+    bits.extend([0] * min(4, capacity - len(bits)))
+    while len(bits) % 8:
+        bits.append(0)
+
+    codewords = []
+    for i in range(0, len(bits), 8):
+        value = 0
+        for bit in bits[i : i + 8]:
+            value = (value << 1) | bit
+        codewords.append(value)
+    for pad in (0xEC, 0x11):
+        if len(codewords) < data_codewords:
+            codewords.append(pad)
+    while len(codewords) < data_codewords:
+        codewords.extend([0xEC, 0x11])
+    codewords = codewords[:data_codewords]
+    all_codewords = codewords + rs_remainder(codewords, ecc_codewords)
+
+    modules = [[None for _ in range(size)] for _ in range(size)]
+    draw_finder(modules, 0, 0)
+    draw_finder(modules, size - 7, 0)
+    draw_finder(modules, 0, size - 7)
+    draw_alignment(modules, 22, 22)
+
+    for i in range(8, size - 8):
+        bit = i % 2 == 0
+        modules[6][i] = bit
+        modules[i][6] = bit
+
+    reserve_format(modules)
+    modules[size - 8][8] = True
+
+    data_bits = []
+    for codeword in all_codewords:
+        data_bits.extend([(codeword >> i) & 1 for i in range(7, -1, -1)])
+
+    bit_index = 0
+    upward = True
+    col = size - 1
+    while col > 0:
+        if col == 6:
+            col -= 1
+        rows = range(size - 1, -1, -1) if upward else range(size)
+        for row in rows:
+            for c in (col, col - 1):
+                if modules[row][c] is not None:
+                    continue
+                bit = bit_index < len(data_bits) and data_bits[bit_index] == 1
+                modules[row][c] = bit ^ qr_mask(0, row, c)
+                bit_index += 1
+        upward = not upward
+        col -= 2
+
+    draw_format_bits(modules, 0)
+    return modules
+
+
+def draw_finder(modules, x, y):
+    size = len(modules)
+    for dy in range(-1, 8):
+        for dx in range(-1, 8):
+            xx = x + dx
+            yy = y + dy
+            if xx < 0 or yy < 0 or xx >= size or yy >= size:
+                continue
+            dark = (
+                0 <= dx <= 6
+                and 0 <= dy <= 6
+                and (dx in {0, 6} or dy in {0, 6} or (2 <= dx <= 4 and 2 <= dy <= 4))
+            )
+            modules[yy][xx] = dark
+
+
+def draw_alignment(modules, cx, cy):
+    for dy in range(-2, 3):
+        for dx in range(-2, 3):
+            modules[cy + dy][cx + dx] = max(abs(dx), abs(dy)) != 1
+
+
+def reserve_format(modules):
+    size = len(modules)
+    for i in range(9):
+        if i != 6:
+            modules[8][i] = False
+            modules[i][8] = False
+    for i in range(8):
+        modules[8][size - 1 - i] = False
+        modules[size - 1 - i][8] = False
+
+
+def draw_format_bits(modules, mask):
+    size = len(modules)
+    bits = format_bits(mask)
+    for i in range(6):
+        modules[8][i] = ((bits >> i) & 1) == 1
+    modules[8][7] = ((bits >> 6) & 1) == 1
+    modules[8][8] = ((bits >> 7) & 1) == 1
+    modules[7][8] = ((bits >> 8) & 1) == 1
+    for i in range(9, 15):
+        modules[14 - i][8] = ((bits >> i) & 1) == 1
+    for i in range(8):
+        modules[size - 1 - i][8] = ((bits >> i) & 1) == 1
+    for i in range(8, 15):
+        modules[8][size - 15 + i] = ((bits >> i) & 1) == 1
+    modules[size - 8][8] = True
+
+
+def format_bits(mask):
+    data = (1 << 3) | mask  # Error correction L, mask pattern 0.
+    rem = data
+    for _ in range(10):
+        rem = (rem << 1) ^ (((rem >> 9) & 1) * 0x537)
+    return ((data << 10) | rem) ^ 0x5412
+
+
+def qr_mask(mask, row, col):
+    if mask != 0:
+        raise ValueError("only QR mask 0 is supported")
+    return (row + col) % 2 == 0
+
+
+def rs_remainder(data, degree):
+    generator = [1]
+    for i in range(degree):
+        generator = poly_multiply(generator, [1, gf_pow(2, i)])
+
+    result = [0] * degree
+    for byte in data:
+        factor = byte ^ result.pop(0)
+        result.append(0)
+        if factor:
+            for i in range(degree):
+                result[i] ^= gf_multiply(generator[i + 1], factor)
+    return result
+
+
+def poly_multiply(a, b):
+    result = [0] * (len(a) + len(b) - 1)
+    for i, x in enumerate(a):
+        for j, y in enumerate(b):
+            result[i + j] ^= gf_multiply(x, y)
+    return result
+
+
+def gf_multiply(x, y):
+    z = 0
+    while y:
+        if y & 1:
+            z ^= x
+        x <<= 1
+        if x & 0x100:
+            x ^= 0x11D
+        y >>= 1
+    return z
+
+
+def gf_pow(x, power):
+    result = 1
+    for _ in range(power):
+        result = gf_multiply(result, x)
+    return result
+
+
 def build_segments(events):
     starts = {}
     segments = []
@@ -399,9 +621,35 @@ class Handler(SimpleHTTPRequestHandler):
         return json.loads(self.rfile.read(length).decode("utf-8"))
 
     def do_GET(self):
-        path = urlparse(self.path).path
+        parsed = urlparse(self.path)
+        path = parsed.path
         if path in {"/state", "/api/state"}:
             self.send_json(read_state())
+            return
+        if path == "/api/connect-info":
+            host = get_lan_ip()
+            base = f"http://{host}:{PORT}"
+            self.send_json(
+                {
+                    "host": host,
+                    "port": PORT,
+                    "tabletUrl": f"{base}/tablet.html",
+                    "controlUrl": f"http://127.0.0.1:{PORT}/control.html",
+                    "overlayUrl": f"http://127.0.0.1:{PORT}/overlay.html",
+                    "editorUrl": f"http://127.0.0.1:{PORT}/editor.html",
+                }
+            )
+            return
+        if path == "/api/qr.svg":
+            query = parse_qs(parsed.query)
+            text = query.get("text", [""])[0]
+            if not text:
+                self.send_json({"ok": False, "error": "text is required"}, HTTPStatus.BAD_REQUEST)
+                return
+            try:
+                self.send_text(qr_svg(text), "image/svg+xml; charset=utf-8")
+            except Exception as e:
+                self.send_json({"ok": False, "error": str(e)}, HTTPStatus.BAD_REQUEST)
             return
         if path == "/api/events":
             events = read_events()
@@ -522,11 +770,13 @@ if __name__ == "__main__":
     if not os.path.exists(STATE_FILE):
         write_state(DEFAULT_STATE.copy())
 
-    port = 8000
+    port = PORT
+    lan_ip = get_lan_ip()
     print(f"[Marineford] server: http://localhost:{port}")
+    print(f"  connect : http://localhost:{port}/connect.html")
     print(f"  overlay : http://localhost:{port}/overlay.html")
     print(f"  control : http://localhost:{port}/control.html")
-    print(f"  tablet  : http://localhost:{port}/tablet.html")
+    print(f"  tablet  : http://{lan_ip}:{port}/tablet.html")
     print(f"  editor  : http://localhost:{port}/editor.html")
     print("  stop    : Ctrl+C")
     ThreadingHTTPServer(("", port), Handler).serve_forever()
