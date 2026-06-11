@@ -16,6 +16,14 @@ deck_presets.json
 rule_presets.json
 exports/
 
+# Broadcast uploads are local runtime data. Keep repository sample assets only.
+images/*-crop-*.jpg
+images/*-original-*.jpg
+images/*-original-*.jpeg
+images/*-original-*.png
+images/*-original-*.webp
+artifacts/
+
 # Local editor and OS noise.
 .DS_Store
 Thumbs.db

@@ -6,26 +6,43 @@
 <title>Marineford 송출 패널</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@500;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
 <style>
-  :root { --bg:#0b0c12; --surface:#141721; --surface2:#1d2230; --line:rgba(201,168,76,.24); --gold:#c9a84c; --gold2:#efd36d; --text:#f4f1e8; --muted:rgba(244,241,232,.58); --red:#c93f46; --blue:#326bd4; --green:#2f9d69; --orange:#c96f2d; }
+  :root { --bg:#050506; --bg-deep:#020203; --surface:rgba(255,255,255,.048); --surface2:#0f1014; --surface-hover:rgba(255,255,255,.075); --line:rgba(255,255,255,.075); --line-hover:rgba(255,255,255,.13); --accent:#5e6ad2; --accent2:#7883e8; --accent-glow:rgba(94,106,210,.28); --text:#ededf0; --muted:#8a8f98; --subtle:rgba(255,255,255,.58); --red:#d34f59; --blue:#5e6ad2; --green:#35a875; --orange:#d28747; }
   * { box-sizing:border-box; }
-  body { margin:0; min-height:100vh; background:var(--bg); color:var(--text); font-family:'Noto Sans KR',sans-serif; padding:24px; }
-  .wrap { width:min(1120px,100%); margin:0 auto; }
-  header { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:18px; }
-  h1 { margin:0; font-family:'Bebas Neue',sans-serif; color:var(--gold2); font-size:38px; letter-spacing:.08em; line-height:1; }
-  .sub { color:var(--muted); font-size:13px; font-weight:800; }
-  .grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-  .card { background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:18px; }
-  .card.full { grid-column:1/-1; }
-  .card-title { color:var(--gold2); font-size:13px; font-weight:900; letter-spacing:.08em; margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--line); }
-  label { display:block; color:var(--muted); font-size:12px; font-weight:900; margin:12px 0 6px; }
-  input, select { width:100%; height:42px; border-radius:6px; border:1px solid var(--line); background:var(--surface2); color:var(--text); padding:0 12px; font:inherit; font-weight:800; outline:none; }
-  input:focus, select:focus { border-color:var(--gold); }
+  body { margin:0; min-height:100vh; background:radial-gradient(ellipse at 50% -10%,rgba(94,106,210,.13),transparent 42%),linear-gradient(180deg,#08080b 0%,var(--bg) 48%,var(--bg-deep) 100%); color:var(--text); font-family:Inter,'Noto Sans KR',system-ui,sans-serif; padding:16px; }
+  body::before { content:""; position:fixed; inset:0; pointer-events:none; opacity:.018; background-image:linear-gradient(rgba(255,255,255,.7) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.7) 1px,transparent 1px); background-size:64px 64px; }
+  .wrap { position:relative; width:min(1580px,100%); margin:0 auto; }
+  header { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:12px; padding:2px 2px 10px; }
+  h1 { margin:0; color:var(--text); font-size:27px; font-weight:800; letter-spacing:0; line-height:1; }
+  .sub { color:var(--muted); font-size:12px; font-weight:700; margin-top:6px; }
+  .header-actions { display:flex; align-items:center; justify-content:flex-end; gap:7px; flex-wrap:wrap; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; grid-template-areas:"obs tablet" "rules presets" "p1 p2" "left right" "score timer"; gap:10px; align-items:start; }
+  .obs-card { grid-area:obs; }
+  .tablet-card { grid-area:tablet; }
+  .rules-card { grid-area:rules; }
+  .presets-card { grid-area:presets; }
+  .p1-card { grid-area:p1; }
+  .p2-card { grid-area:p2; }
+  .left-images-card { grid-area:left; }
+  .right-images-card { grid-area:right; }
+  .score-card { grid-area:score; }
+  .timer-card { grid-area:timer; }
+  .card { position:relative; background:linear-gradient(180deg,rgba(255,255,255,.062),rgba(255,255,255,.026)); border:1px solid var(--line); border-radius:8px; padding:13px; box-shadow:0 0 0 1px rgba(255,255,255,.018),0 12px 32px rgba(0,0,0,.24); transition:background .2s cubic-bezier(.16,1,.3,1),border-color .2s cubic-bezier(.16,1,.3,1); }
+  .card:hover { background:linear-gradient(180deg,rgba(255,255,255,.072),rgba(255,255,255,.032)); border-color:var(--line-hover); }
+  .card.full { grid-column:auto; }
+  .card-title { color:var(--text); font-size:12px; font-weight:800; margin-bottom:10px; padding-bottom:9px; border-bottom:1px solid var(--line); }
+  label { display:block; color:var(--muted); font-size:11px; font-weight:800; margin:8px 0 5px; }
+  input, select { width:100%; height:38px; border-radius:7px; border:1px solid var(--line); background:var(--surface2); color:var(--text); padding:0 11px; font:inherit; font-size:13px; font-weight:700; outline:none; transition:border-color .2s,box-shadow .2s; }
+  input:focus, select:focus { border-color:rgba(94,106,210,.75); box-shadow:0 0 0 3px rgba(94,106,210,.16); }
   input[type=file] { display:none; }
-  button { min-height:40px; border:0; border-radius:6px; padding:0 14px; color:#fff; font:inherit; font-size:13px; font-weight:900; cursor:pointer; white-space:nowrap; }
-  button:active { transform:translateY(1px); }
+  button { min-height:36px; border:0; border-radius:7px; padding:0 12px; color:var(--text); font:inherit; font-size:12px; font-weight:800; cursor:pointer; white-space:nowrap; transition:background .2s,border-color .2s,box-shadow .2s,transform .2s cubic-bezier(.16,1,.3,1); }
+  button:hover { transform:translateY(-1px); }
+  button:active { transform:scale(.98); }
   button:disabled { opacity:.45; cursor:not-allowed; transform:none; }
-  .btn-gold { background:var(--gold); color:#171100; }
-  .btn-outline { background:transparent; border:1px solid var(--line); color:var(--muted); }
+  button:focus-visible { outline:2px solid var(--accent2); outline-offset:2px; }
+  .btn-gold { background:var(--accent); color:#fff; box-shadow:0 0 0 1px rgba(112,125,232,.55),0 5px 16px var(--accent-glow),inset 0 1px rgba(255,255,255,.16); }
+  .btn-gold:hover { background:var(--accent2); }
+  .btn-outline { background:rgba(255,255,255,.045); border:1px solid var(--line); color:var(--muted); box-shadow:inset 0 1px rgba(255,255,255,.035); }
+  .btn-outline:hover { background:var(--surface-hover); color:var(--text); border-color:var(--line-hover); }
   .btn-red { background:var(--red); }
   .btn-blue { background:var(--blue); }
   .btn-green { background:var(--green); }
@@ -33,47 +50,70 @@
   .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
   .row > * { flex:1; }
   .row button { flex:0 0 auto; }
-  .url-box { background:var(--surface2); border:1px solid var(--line); border-radius:6px; padding:12px; font-size:17px; font-weight:900; overflow-wrap:anywhere; }
-  .help { color:var(--muted); font-size:12px; line-height:1.55; margin-top:8px; }
-  .tablet-connect { display:grid; grid-template-columns:220px 1fr; gap:16px; align-items:center; }
-  .qr-wrap { background:#fff; border-radius:8px; padding:12px; min-height:220px; display:grid; place-items:center; border:2px solid rgba(201,168,76,.55); }
-  .qr-inline { width:196px; height:196px; display:grid; place-items:center; color:#111; }
-  .qr-inline svg { width:196px; height:196px; display:block; }
-  .qr-wrap img { width:196px; height:196px; display:none; }
+  .url-box { background:var(--surface2); border:1px solid var(--line); border-radius:7px; padding:9px 10px; font-size:13px; font-weight:750; overflow-wrap:anywhere; }
+  .help { color:var(--muted); font-size:11px; line-height:1.45; margin-top:6px; }
+  .tablet-connect { display:grid; grid-template-columns:126px 1fr; gap:12px; align-items:center; }
+  .qr-wrap { background:#fff; border-radius:7px; padding:8px; min-height:126px; display:grid; place-items:center; border:1px solid rgba(255,255,255,.16); }
+  .qr-inline { width:110px; height:110px; display:grid; place-items:center; color:#111; }
+  .qr-inline svg { width:110px; height:110px; display:block; }
+  .qr-wrap img { width:110px; height:110px; display:none; }
   .qr-wrap.use-img img { display:block; }
   .qr-wrap.use-img .qr-inline { display:none; }
-  .player-name-preview { min-height:118px; display:grid; place-items:center; border:1px solid var(--line); border-radius:8px; background:linear-gradient(180deg,#1a2030,#10141e); color:var(--gold2); font-size:clamp(34px,5vw,64px); font-weight:900; text-align:center; line-height:1.05; padding:12px; word-break:keep-all; }
+  .player-name-preview { min-height:70px; display:grid; place-items:center; border:1px solid var(--line); border-radius:7px; background:linear-gradient(180deg,rgba(94,106,210,.11),rgba(255,255,255,.02)); color:var(--text); font-size:clamp(26px,3vw,44px); font-weight:800; text-align:center; line-height:1.05; padding:9px; word-break:keep-all; }
   .score-board { display:grid; grid-template-columns:1fr auto 1fr; gap:12px; align-items:end; text-align:center; }
   .score-name { color:var(--muted); font-size:12px; font-weight:900; margin-bottom:4px; }
   .score-val { font-family:'Bebas Neue',sans-serif; font-size:64px; line-height:.9; }
-  .colon { font-family:'Bebas Neue',sans-serif; color:var(--gold); font-size:44px; padding-bottom:10px; }
-  .timer-big { font-family:'Bebas Neue',sans-serif; font-size:78px; line-height:.9; text-align:center; letter-spacing:0; }
+  .colon { font-family:'Bebas Neue',sans-serif; color:var(--accent2); font-size:44px; padding-bottom:10px; }
+  .timer-big { font-family:'Bebas Neue',sans-serif; font-size:68px; line-height:.9; text-align:center; letter-spacing:0; }
   .timer-big.warning { color:#ffbc73; }
   .timer-big.danger { color:#ff7078; }
   .image-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-  .preview { position:relative; height:180px; border:1px dashed var(--line); border-radius:6px; background:var(--surface2); display:grid; place-items:center; overflow:hidden; color:var(--muted); font-size:12px; font-weight:800; cursor:pointer; }
-  .preview.tall { height:260px; }
+  .preview { position:relative; height:132px; border:1px dashed var(--line); border-radius:7px; background:var(--surface2); display:grid; place-items:center; overflow:hidden; color:var(--muted); font-size:11px; font-weight:800; cursor:pointer; }
+  .preview.tall { height:194px; }
   .preview img { width:100%; height:100%; object-fit:cover; display:none; }
   .preview img.loaded { display:block; }
   .clear-x { position:absolute; top:8px; right:8px; width:34px; min-height:34px; padding:0; border-radius:50%; background:rgba(201,63,70,.92); z-index:2; display:none; }
   .preview.has-image .clear-x { display:block; }
-  .status { height:22px; margin-top:12px; color:#8be0af; text-align:center; font-size:12px; font-weight:900; opacity:0; transition:opacity .2s; }
-  .status.show { opacity:1; }
+  .image-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; }
+  .image-actions button { width:100%; }
+  .preset-toolbar { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; align-items:end; }
+  .preset-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:10px; margin-top:12px; }
+  .preset-empty { grid-column:1/-1; min-height:90px; display:grid; place-items:center; color:var(--muted); border:1px dashed var(--line); border-radius:6px; font-size:13px; font-weight:800; }
+  .preset-card { min-width:0; border:1px solid var(--line); border-radius:7px; padding:10px; background:var(--surface2); display:grid; gap:9px; }
+  .preset-name { min-width:0; color:#c8cdf8; font-size:15px; font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .preset-images { display:grid; grid-template-columns:1fr 1fr; gap:6px; height:112px; }
+  .preset-thumb { position:relative; min-width:0; overflow:hidden; border-radius:5px; border:1px solid rgba(201,168,76,.18); background:#080a10; display:grid; place-items:center; color:var(--muted); font-size:11px; font-weight:900; }
+  .preset-thumb img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; background:#080a10; }
+  .preset-thumb img.failed { display:none; }
+  .preset-actions { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+  .preset-actions button { min-width:0; padding:0 8px; }
+  .status { position:fixed; right:18px; bottom:18px; z-index:80; min-width:190px; min-height:40px; padding:11px 14px; color:#b7f3d1; background:rgba(10,11,14,.94); border:1px solid rgba(53,168,117,.35); border-radius:8px; text-align:center; font-size:12px; font-weight:800; opacity:0; transform:translateY(10px); pointer-events:none; transition:opacity .2s,transform .2s; box-shadow:0 16px 40px rgba(0,0,0,.45); }
+  .status.show { opacity:1; transform:none; }
   .status.err { color:#ff9299; }
   .modal-backdrop { position:fixed; inset:0; display:none; align-items:center; justify-content:center; padding:18px; background:rgba(0,0,0,.76); z-index:30; }
   .modal-backdrop.open { display:flex; }
-  .crop-modal { width:min(980px,100%); max-height:calc(100vh - 36px); overflow:auto; background:#111622; border:1px solid var(--line); border-radius:10px; padding:18px; box-shadow:0 20px 60px rgba(0,0,0,.55); }
+  .crop-modal { width:min(1040px,100%); max-height:calc(100vh - 28px); overflow:auto; background:#0b0c10; border:1px solid var(--line-hover); border-radius:8px; padding:16px; box-shadow:0 30px 90px rgba(0,0,0,.72),0 0 60px rgba(94,106,210,.1); }
   .crop-layout { display:grid; grid-template-columns:minmax(0,1fr) 260px; gap:16px; align-items:start; }
-  .crop-stage { background:#05070c; border:1px solid var(--line); border-radius:8px; padding:12px; display:grid; place-items:center; overflow:hidden; }
-  #cropCanvas { width:min(100%,520px); max-height:70vh; border-radius:6px; background:#000; touch-action:none; cursor:grab; }
+  .crop-stage { min-height:480px; background:#030304; border:1px solid var(--line); border-radius:8px; padding:18px; display:grid; place-items:center; overflow:hidden; }
+  .crop-viewport { --crop-ratio:720/1600; --crop-ratio-value:.45; position:relative; display:grid; place-items:center; width:min(100%,calc(68vh * var(--crop-ratio-value))); aspect-ratio:var(--crop-ratio); background:#050506; box-shadow:0 0 0 1px rgba(255,255,255,.1),0 18px 50px rgba(0,0,0,.62); }
+  #cropCanvas { display:block; width:100%; height:100%; border-radius:0; background:#050506; touch-action:none; cursor:grab; }
   #cropCanvas:active { cursor:grabbing; }
+  .crop-frame { position:absolute; inset:0; pointer-events:none; border:2px solid rgba(120,131,232,.95); box-shadow:inset 0 0 0 1px rgba(255,255,255,.25),0 0 24px rgba(94,106,210,.42); }
+  .crop-frame::before,.crop-frame::after { content:""; position:absolute; inset:12px; border:1px dashed rgba(255,255,255,.24); }
+  .crop-frame::after { inset:0; background:linear-gradient(90deg,transparent 33.2%,rgba(255,255,255,.12) 33.3%,rgba(255,255,255,.12) 33.5%,transparent 33.6%,transparent 66.4%,rgba(255,255,255,.12) 66.5%,rgba(255,255,255,.12) 66.7%,transparent 66.8%),linear-gradient(transparent 33.2%,rgba(255,255,255,.12) 33.3%,rgba(255,255,255,.12) 33.5%,transparent 33.6%,transparent 66.4%,rgba(255,255,255,.12) 66.5%,rgba(255,255,255,.12) 66.7%,transparent 66.8%); }
+  .crop-badge { position:absolute; left:10px; top:10px; z-index:2; padding:5px 7px; border-radius:5px; color:#fff; background:rgba(5,5,6,.76); border:1px solid rgba(255,255,255,.14); font-size:10px; font-weight:800; backdrop-filter:blur(8px); }
   .crop-controls { display:grid; gap:12px; }
   .crop-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px; }
+  .btn-toggle.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .rule-preset-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:7px; }
   @media (max-width:820px) {
     body { padding:14px; }
     header, .tablet-connect { grid-template-columns:1fr; display:grid; }
-    .grid, .image-grid, .crop-layout { grid-template-columns:1fr; }
+    .grid { grid-template-columns:1fr; grid-template-areas:"obs" "tablet" "rules" "presets" "p1" "p2" "left" "right" "score" "timer"; }
+    .image-grid, .crop-layout { grid-template-columns:1fr; }
+    .preset-toolbar { grid-template-columns:1fr; }
   }
+  @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important; transition:none!important; } }
 </style>
 </head>
 <body>
@@ -81,13 +121,18 @@
   <header>
     <div>
       <h1>MARINEFORD CONTROL</h1>
-      <div class="sub">OBS 연결, 태블릿 QR, 룰 프리셋, 덱 이미지 편집을 관리합니다.</div>
+      <div class="sub">BROADCAST OPERATIONS · v1.5</div>
     </div>
-    <button class="btn-red" onclick="resetAll()">전체 초기화</button>
+    <div class="header-actions">
+      <button class="btn-outline" onclick="openPanel('/overlay.html')">송출 화면</button>
+      <button class="btn-outline" onclick="openPanel('/tablet.html')">태블릿 화면</button>
+      <button class="btn-outline" onclick="openPanel('/editor.html')">로그 패널</button>
+      <button class="btn-red" onclick="resetAll()">전체 초기화</button>
+    </div>
   </header>
 
   <div class="grid">
-    <section class="card full">
+    <section class="card full obs-card">
       <div class="card-title">OBS 화면 연결</div>
       <label>OBS 브라우저 소스 URL</label>
       <div class="url-box" id="obsUrlText">http://127.0.0.1:8000/overlay.html</div>
@@ -98,7 +143,7 @@
       <div class="help">OBS에서 소스 추가 → 브라우저를 선택하고 위 URL을 입력하세요. 권장 크기는 1920 x 1080입니다.</div>
     </section>
 
-    <section class="card full">
+    <section class="card full tablet-card">
       <div class="card-title">태블릿 연결</div>
       <div class="tablet-connect">
         <div class="qr-wrap" id="tabletQrWrap">
@@ -117,18 +162,25 @@
       </div>
     </section>
 
-    <section class="card full">
+    <section class="card full rules-card">
       <div class="card-title">대회 및 룰 설정</div>
       <label>대회명</label>
-      <input type="text" id="tournamentName" oninput="push()">
+      <input type="text" id="tournamentName" oninput="push(['tournamentName'])">
+      <label>저장된 룰 프리셋</label>
+      <div class="rule-preset-row">
+        <select id="rulePresetSelect">
+          <option value="">프리셋 선택</option>
+        </select>
+        <button class="btn-outline" onclick="loadSelectedRulePreset()">불러오기</button>
+      </div>
       <div class="row">
         <div>
-          <label>룰 프리셋 이름</label>
-          <input type="text" id="rulePresetName" list="rulePresetList" placeholder="예: 유희왕 BO3" onchange="applyRulePreset()">
+          <label>새 프리셋 이름</label>
+          <input type="text" id="rulePresetName" placeholder="예: 유희왕 BO3">
         </div>
         <div>
           <label>매치 방식</label>
-          <select id="matchTarget" onchange="push()">
+          <select id="matchTarget" onchange="applyRuleInputs()">
             <option value="2">BO3</option>
             <option value="1">BO1</option>
           </select>
@@ -145,68 +197,98 @@
         </div>
         <button class="btn-gold" style="align-self:end;" onclick="saveRulePreset()">룰 프리셋 저장</button>
       </div>
-      <div class="help">프리셋은 게임별 룰 차이를 저장합니다. 기본값은 BO3, 기본 타이머 40분, 엑스트라 턴 15분입니다.</div>
+      <div class="help" id="rulePresetStatus">BO3 · 40분 · 엑스트라 턴 15분</div>
     </section>
 
-    <section class="card">
+    <section class="card p1-card">
       <div class="card-title">플레이어 1</div>
       <label>닉네임</label>
-      <input type="text" id="p1Name" oninput="push(); updateNamePreviews();">
+      <input type="text" id="p1Name" oninput="push(['p1Name']); updateNamePreviews();">
       <label>덱 이름</label>
-      <input type="text" id="p1Deck" list="deckPresetList" oninput="push()" onchange="applyDeckPreset('left')">
+      <input type="text" id="p1Deck" list="deckPresetList" onchange="handleDeckChange('left')">
       <label>OBS 상단 닉네임 미리보기</label>
       <div class="player-name-preview" id="p1NamePreview">플레이어 1</div>
     </section>
 
-    <section class="card">
+    <section class="card p2-card">
       <div class="card-title">플레이어 2</div>
       <label>닉네임</label>
-      <input type="text" id="p2Name" oninput="push(); updateNamePreviews();">
+      <input type="text" id="p2Name" oninput="push(['p2Name']); updateNamePreviews();">
       <label>덱 이름</label>
-      <input type="text" id="p2Deck" list="deckPresetList" oninput="push()" onchange="applyDeckPreset('right')">
+      <input type="text" id="p2Deck" list="deckPresetList" onchange="handleDeckChange('right')">
       <label>OBS 상단 닉네임 미리보기</label>
       <div class="player-name-preview" id="p2NamePreview">플레이어 2</div>
     </section>
 
-    <section class="card">
+    <section class="card full presets-card">
+      <div class="card-title">저장된 덱 프리셋 불러오기</div>
+      <div class="preset-toolbar">
+        <div>
+          <label>덱 이름 검색</label>
+          <input type="search" id="deckPresetSearch" placeholder="저장된 덱 이름 검색" oninput="renderDeckPresetBrowser()">
+        </div>
+        <button class="btn-outline" onclick="loadDeckPresets()">목록 새로고침</button>
+      </div>
+      <div class="preset-grid" id="deckPresetBrowser">
+        <div class="preset-empty">저장된 덱 프리셋을 불러오는 중입니다.</div>
+      </div>
+    </section>
+
+    <section class="card left-images-card">
       <div class="card-title">좌측 덱 이미지</div>
       <div class="image-grid">
         <div>
           <label>이미지 1</label>
-          <div class="preview tall" id="lp1-wrap" onclick="triggerFile('lp1-file')"><button class="clear-x" onclick="event.stopPropagation(); clearImg('leftImg1','lp1-preview','lp1-ph')">×</button><img id="lp1-preview" alt=""><span id="lp1-ph">클릭해서 자르기</span></div>
+          <div class="preview tall" id="lp1-wrap" onclick="editOrSelectImage('leftImg1','lp1-preview','lp1-ph','image1','lp1-file')"><button class="clear-x" title="이미지 삭제" onclick="event.stopPropagation(); clearImg('leftImg1','lp1-preview','lp1-ph')">×</button><img id="lp1-preview" alt=""><span id="lp1-ph">이미지를 선택하세요</span></div>
           <input type="text" id="leftImg1" placeholder="경로 또는 URL" oninput="onPath('leftImg1','lp1-preview','lp1-ph')">
+          <div class="image-actions">
+            <button class="btn-outline" onclick="triggerFile('lp1-file')">파일 선택</button>
+            <button class="btn-gold" id="lp1-edit" disabled onclick="editCurrentImage('leftImg1','lp1-preview','lp1-ph','image1')">자르기 · 반전</button>
+          </div>
           <input type="file" id="lp1-file" accept="image/*" onchange="onFile(this,'leftImg1','lp1-preview','lp1-ph','image1')">
         </div>
         <div>
           <label>이미지 2</label>
-          <div class="preview" id="lp2-wrap" onclick="triggerFile('lp2-file')"><button class="clear-x" onclick="event.stopPropagation(); clearImg('leftImg2','lp2-preview','lp2-ph')">×</button><img id="lp2-preview" alt=""><span id="lp2-ph">클릭해서 자르기</span></div>
+          <div class="preview" id="lp2-wrap" onclick="editOrSelectImage('leftImg2','lp2-preview','lp2-ph','image2','lp2-file')"><button class="clear-x" title="이미지 삭제" onclick="event.stopPropagation(); clearImg('leftImg2','lp2-preview','lp2-ph')">×</button><img id="lp2-preview" alt=""><span id="lp2-ph">이미지를 선택하세요</span></div>
           <input type="text" id="leftImg2" placeholder="경로 또는 URL" oninput="onPath('leftImg2','lp2-preview','lp2-ph')">
+          <div class="image-actions">
+            <button class="btn-outline" onclick="triggerFile('lp2-file')">파일 선택</button>
+            <button class="btn-gold" id="lp2-edit" disabled onclick="editCurrentImage('leftImg2','lp2-preview','lp2-ph','image2')">자르기 · 반전</button>
+          </div>
           <input type="file" id="lp2-file" accept="image/*" onchange="onFile(this,'leftImg2','lp2-preview','lp2-ph','image2')">
         </div>
       </div>
       <button class="btn-outline" style="margin-top:12px;" onclick="saveDeckPreset('left')">좌측 덱 프리셋 저장</button>
     </section>
 
-    <section class="card">
+    <section class="card right-images-card">
       <div class="card-title">우측 덱 이미지</div>
       <div class="image-grid">
         <div>
           <label>이미지 1</label>
-          <div class="preview tall" id="rp1-wrap" onclick="triggerFile('rp1-file')"><button class="clear-x" onclick="event.stopPropagation(); clearImg('rightImg1','rp1-preview','rp1-ph')">×</button><img id="rp1-preview" alt=""><span id="rp1-ph">클릭해서 자르기</span></div>
+          <div class="preview tall" id="rp1-wrap" onclick="editOrSelectImage('rightImg1','rp1-preview','rp1-ph','image1','rp1-file')"><button class="clear-x" title="이미지 삭제" onclick="event.stopPropagation(); clearImg('rightImg1','rp1-preview','rp1-ph')">×</button><img id="rp1-preview" alt=""><span id="rp1-ph">이미지를 선택하세요</span></div>
           <input type="text" id="rightImg1" placeholder="경로 또는 URL" oninput="onPath('rightImg1','rp1-preview','rp1-ph')">
+          <div class="image-actions">
+            <button class="btn-outline" onclick="triggerFile('rp1-file')">파일 선택</button>
+            <button class="btn-gold" id="rp1-edit" disabled onclick="editCurrentImage('rightImg1','rp1-preview','rp1-ph','image1')">자르기 · 반전</button>
+          </div>
           <input type="file" id="rp1-file" accept="image/*" onchange="onFile(this,'rightImg1','rp1-preview','rp1-ph','image1')">
         </div>
         <div>
           <label>이미지 2</label>
-          <div class="preview" id="rp2-wrap" onclick="triggerFile('rp2-file')"><button class="clear-x" onclick="event.stopPropagation(); clearImg('rightImg2','rp2-preview','rp2-ph')">×</button><img id="rp2-preview" alt=""><span id="rp2-ph">클릭해서 자르기</span></div>
+          <div class="preview" id="rp2-wrap" onclick="editOrSelectImage('rightImg2','rp2-preview','rp2-ph','image2','rp2-file')"><button class="clear-x" title="이미지 삭제" onclick="event.stopPropagation(); clearImg('rightImg2','rp2-preview','rp2-ph')">×</button><img id="rp2-preview" alt=""><span id="rp2-ph">이미지를 선택하세요</span></div>
           <input type="text" id="rightImg2" placeholder="경로 또는 URL" oninput="onPath('rightImg2','rp2-preview','rp2-ph')">
+          <div class="image-actions">
+            <button class="btn-outline" onclick="triggerFile('rp2-file')">파일 선택</button>
+            <button class="btn-gold" id="rp2-edit" disabled onclick="editCurrentImage('rightImg2','rp2-preview','rp2-ph','image2')">자르기 · 반전</button>
+          </div>
           <input type="file" id="rp2-file" accept="image/*" onchange="onFile(this,'rightImg2','rp2-preview','rp2-ph','image2')">
         </div>
       </div>
       <button class="btn-outline" style="margin-top:12px;" onclick="saveDeckPreset('right')">우측 덱 프리셋 저장</button>
     </section>
 
-    <section class="card">
+    <section class="card score-card">
       <div class="card-title">수동 점수 조절</div>
       <div class="score-board">
         <div><div class="score-name" id="score-p1-label">플레이어 1</div><div class="row"><button class="btn-outline" onclick="changeScore('left',-1)">-</button><div class="score-val" id="scoreL">0</div><button class="btn-outline" onclick="changeScore('left',1)">+</button></div></div>
@@ -216,7 +298,7 @@
       <button class="btn-outline" style="margin-top:12px;" onclick="resetScore()">점수 초기화</button>
     </section>
 
-    <section class="card">
+    <section class="card timer-card">
       <div class="card-title">타이머</div>
       <div class="timer-big" id="timerDisplay">40:00</div>
       <div class="row" style="justify-content:center;">
@@ -236,7 +318,13 @@
   <div class="crop-modal">
     <div class="card-title">이미지 자르기</div>
     <div class="crop-layout">
-      <div class="crop-stage"><canvas id="cropCanvas" width="720" height="1600"></canvas></div>
+      <div class="crop-stage">
+        <div class="crop-viewport" id="cropViewport">
+          <canvas id="cropCanvas" width="720" height="1600"></canvas>
+          <div class="crop-frame"></div>
+          <div class="crop-badge" id="cropFrameLabel">송출 영역 · 720 × 1600</div>
+        </div>
+      </div>
       <div class="crop-controls">
         <div class="help">드래그로 위치를 조절하고, 확대/좌우반전을 맞춘 뒤 사용 확정하세요.</div>
         <label>확대</label>
@@ -245,7 +333,7 @@
         <input type="range" id="cropX" min="-500" max="500" step="1" value="0" oninput="setCropOffset('x', this.value)">
         <label>세로 위치</label>
         <input type="range" id="cropY" min="-500" max="500" step="1" value="0" oninput="setCropOffset('y', this.value)">
-        <button class="btn-outline" onclick="toggleCropFlip()">좌우반전</button>
+        <button class="btn-outline btn-toggle" id="cropFlipBtn" onclick="toggleCropFlip()">좌우반전</button>
         <div class="crop-actions">
           <button class="btn-outline" onclick="closeCropModal()">취소</button>
           <button class="btn-gold" onclick="confirmCrop()">사용 확정</button>
@@ -256,18 +344,21 @@
 </div>
 
 <script>
-let state = { p1Name:'', p1Deck:'', p2Name:'', p2Deck:'', tournamentName:'', scoreLeft:0, scoreRight:0, timerSeconds:2400, timerRunning:false, mainTimerSeconds:2400, extraTurnSeconds:900, matchTarget:2, leftImg1:'', leftImg2:'', rightImg1:'', rightImg2:'', p1CardImg:'', p2CardImg:'' };
+let state = { p1Name:'', p1Deck:'', p2Name:'', p2Deck:'', tournamentName:'', scoreLeft:0, scoreRight:0, timerSeconds:2400, timerRunning:false, mainTimerSeconds:2400, extraTurnSeconds:900, matchTarget:2, leftImg1:'', leftImg2:'', rightImg1:'', rightImg2:'', leftImg1Source:'', leftImg2Source:'', rightImg1Source:'', rightImg2Source:'', p1CardImg:'', p2CardImg:'' };
 let tabletUrl = '';
 let overlayUrl = 'http://127.0.0.1:8000/overlay.html';
 let deckPresets = [];
 let rulePresets = [];
-let timerInterval = null;
-let timerRunning = false;
 let remainingSeconds = 2400;
+let timerBaseAt = Date.now();
+let settingsPushTimer = null;
+let settingsRequestId = 0;
+let pendingSettingsFields = new Set();
 let cropState = null;
 
 function $(id) { return document.getElementById(id); }
 function escapeHtml(value) { return String(value || '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
+function escapeJs(value) { return String(value || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
 
 function showStatus(message, isErr = false) {
   const el = $('status-bar');
@@ -276,6 +367,10 @@ function showStatus(message, isErr = false) {
   el.classList.add('show');
   clearTimeout(el._timer);
   el._timer = setTimeout(() => el.classList.remove('show'), 1800);
+}
+
+function openPanel(path) {
+  window.open(path, '_blank', 'noopener,noreferrer');
 }
 
 async function loadTabletConnection() {
@@ -327,7 +422,34 @@ async function loadDeckPresets() {
     const result = await res.json();
     deckPresets = result.presets || [];
     $('deckPresetList').innerHTML = deckPresets.map(p => `<option value="${escapeHtml(p.deckName)}"></option>`).join('');
-  } catch (e) {}
+    renderDeckPresetBrowser();
+  } catch (e) {
+    $('deckPresetBrowser').innerHTML = '<div class="preset-empty">덱 프리셋을 불러오지 못했습니다.</div>';
+  }
+}
+
+function renderDeckPresetBrowser() {
+  const browser = $('deckPresetBrowser');
+  if (!browser) return;
+  const query = $('deckPresetSearch')?.value.trim().toLowerCase() || '';
+  const filtered = deckPresets.filter(p => p.deckName.toLowerCase().includes(query));
+  if (!filtered.length) {
+    browser.innerHTML = `<div class="preset-empty">${query ? '검색 결과가 없습니다.' : '저장된 덱 프리셋이 없습니다.'}</div>`;
+    return;
+  }
+  browser.innerHTML = filtered.map(p => `
+    <article class="preset-card">
+      <div class="preset-name" title="${escapeHtml(p.deckName)}">${escapeHtml(p.deckName)}</div>
+      <div class="preset-images">
+        <div class="preset-thumb"><span>이미지 1 없음</span><img src="${escapeHtml(p.image1)}" alt="" onerror="this.classList.add('failed')"></div>
+        <div class="preset-thumb"><span>이미지 2 없음</span><img src="${escapeHtml(p.image2)}" alt="" onerror="this.classList.add('failed')"></div>
+      </div>
+      <div class="preset-actions">
+        <button class="btn-blue" onclick="loadDeckPresetToSide('${escapeJs(p.deckName)}','left')">왼쪽에 불러오기</button>
+        <button class="btn-red" onclick="loadDeckPresetToSide('${escapeJs(p.deckName)}','right')">오른쪽에 불러오기</button>
+      </div>
+    </article>
+  `).join('');
 }
 
 async function loadRulePresets() {
@@ -336,6 +458,8 @@ async function loadRulePresets() {
     const result = await res.json();
     rulePresets = result.presets || [];
     $('rulePresetList').innerHTML = rulePresets.map(p => `<option value="${escapeHtml(p.name)}"></option>`).join('');
+    $('rulePresetSelect').innerHTML = '<option value="">프리셋 선택</option>' + rulePresets.map(p => `<option value="${escapeHtml(p.name)}">${escapeHtml(p.name)}</option>`).join('');
+    $('rulePresetStatus').textContent = rulePresets.length ? `${rulePresets.length}개 프리셋 저장됨` : '저장된 룰 프리셋 없음';
   } catch (e) {}
 }
 
@@ -348,15 +472,46 @@ function applyDeckPreset(side) {
   const isLeft = side === 'left';
   const preset = findDeckPreset($(isLeft ? 'p1Deck' : 'p2Deck').value);
   if (!preset) return;
+  applyPresetToSide(preset, side);
+}
+
+function handleDeckChange(side) {
+  const isLeft = side === 'left';
+  const preset = findDeckPreset($(isLeft ? 'p1Deck' : 'p2Deck').value);
+  if (preset) applyPresetToSide(preset, side);
+  else push([isLeft ? 'p1Deck' : 'p2Deck']);
+}
+
+function applyPresetToSide(preset, side) {
+  const isLeft = side === 'left';
   const image1Key = isLeft ? 'leftImg1' : 'rightImg1';
   const image2Key = isLeft ? 'leftImg2' : 'rightImg2';
+  const source1Key = isLeft ? 'leftImg1Source' : 'rightImg1Source';
+  const source2Key = isLeft ? 'leftImg2Source' : 'rightImg2Source';
   state[image1Key] = preset.image1;
   state[image2Key] = preset.image2;
+  state[source1Key] = preset.sourceImage1 || preset.image1;
+  state[source2Key] = preset.sourceImage2 || preset.image2;
   setInputValue(image1Key, preset.image1);
   setInputValue(image2Key, preset.image2);
   setPreview(isLeft ? 'lp1-preview' : 'rp1-preview', isLeft ? 'lp1-ph' : 'rp1-ph', preset.image1);
   setPreview(isLeft ? 'lp2-preview' : 'rp2-preview', isLeft ? 'lp2-ph' : 'rp2-ph', preset.image2);
-  push();
+  push([
+    isLeft ? 'p1Deck' : 'p2Deck',
+    image1Key,
+    image2Key,
+    source1Key,
+    source2Key,
+  ]);
+}
+
+function loadDeckPresetToSide(deckName, side) {
+  const preset = findDeckPreset(deckName);
+  if (!preset) { showStatus('덱 프리셋을 찾지 못했습니다.', true); return; }
+  const deckInput = $(side === 'left' ? 'p1Deck' : 'p2Deck');
+  deckInput.value = preset.deckName;
+  applyPresetToSide(preset, side);
+  showStatus(`${preset.deckName} 프리셋을 ${side === 'left' ? '왼쪽' : '오른쪽'}에 불러왔습니다.`);
 }
 
 async function saveDeckPreset(side) {
@@ -364,9 +519,11 @@ async function saveDeckPreset(side) {
   const deckName = $(isLeft ? 'p1Deck' : 'p2Deck').value.trim();
   const image1 = $(isLeft ? 'leftImg1' : 'rightImg1').value.trim();
   const image2 = $(isLeft ? 'leftImg2' : 'rightImg2').value.trim();
+  const sourceImage1 = state[isLeft ? 'leftImg1Source' : 'rightImg1Source'] || image1;
+  const sourceImage2 = state[isLeft ? 'leftImg2Source' : 'rightImg2Source'] || image2;
   if (!deckName || !image1 || !image2) { showStatus('덱 이름과 이미지 2장을 모두 입력하세요', true); return; }
   try {
-    const res = await fetch('/api/deck-presets', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ deckName, image1, image2 }) });
+    const res = await fetch('/api/deck-presets', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ deckName, image1, image2, sourceImage1, sourceImage2 }) });
     const result = await res.json();
     if (!result.ok) throw new Error(result.error || 'save failed');
     await loadDeckPresets();
@@ -385,17 +542,25 @@ function applyRuleInputs() {
     state.timerSeconds = remainingSeconds;
     updateTimerUI();
   }
-  push();
+  push(['matchTarget', 'mainTimerSeconds', 'extraTurnSeconds']);
 }
 
-function applyRulePreset() {
-  const name = $('rulePresetName').value.trim().toLowerCase();
+function applyRulePreset(presetName = $('rulePresetName').value) {
+  const name = String(presetName || '').trim().toLowerCase();
   const preset = rulePresets.find(p => p.name.toLowerCase() === name);
-  if (!preset) return;
+  if (!preset) { showStatus('룰 프리셋을 선택하세요.', true); return; }
+  $('rulePresetName').value = preset.name;
+  $('rulePresetSelect').value = preset.name;
   $('matchTarget').value = String(preset.matchTarget || 2);
   $('mainTimerMinutes').value = Math.round((preset.mainTimerSeconds || preset.timerSeconds || 2400) / 60);
   $('extraTurnMinutes').value = Math.round((preset.extraTurnSeconds || 900) / 60);
   applyRuleInputs();
+  $('rulePresetStatus').textContent = `${preset.name} 불러옴`;
+  showStatus(`${preset.name} 룰 프리셋 불러옴`);
+}
+
+function loadSelectedRulePreset() {
+  applyRulePreset($('rulePresetSelect').value);
 }
 
 async function saveRulePreset() {
@@ -412,43 +577,73 @@ async function saveRulePreset() {
     const result = await res.json();
     if (!result.ok) throw new Error(result.error || 'save failed');
     await loadRulePresets();
+    $('rulePresetSelect').value = name;
+    $('rulePresetStatus').textContent = `${name} 저장됨`;
     showStatus('룰 프리셋 저장됨');
   } catch (e) { showStatus('룰 프리셋 저장 실패', true); }
 }
 
-async function push() {
-  state.p1Name = $('p1Name').value;
-  state.p1Deck = $('p1Deck').value;
-  state.p2Name = $('p2Name').value;
-  state.p2Deck = $('p2Deck').value;
-  state.tournamentName = $('tournamentName').value;
-  state.p1CardImg = '';
-  state.p2CardImg = '';
-  state.leftImg1 = $('leftImg1').value;
-  state.leftImg2 = $('leftImg2').value;
-  state.rightImg1 = $('rightImg1').value;
-  state.rightImg2 = $('rightImg2').value;
-  state.matchTarget = parseInt($('matchTarget').value, 10);
-  state.mainTimerSeconds = Math.max(60, parseInt($('mainTimerMinutes').value || '40', 10) * 60);
-  state.extraTurnSeconds = Math.max(0, parseInt($('extraTurnMinutes').value || '15', 10) * 60);
-  state.timerSeconds = remainingSeconds;
-  state.timerRunning = timerRunning;
-  $('score-p1-label').textContent = state.p1Name || '플레이어 1';
-  $('score-p2-label').textContent = state.p2Name || '플레이어 2';
-  try {
-    const res = await fetch('/api/state', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(state) });
-    const result = await res.json();
-    if (result.ok) state = { ...state, ...result.state };
-    showStatus('업데이트됨');
-  } catch (e) { showStatus('서버 연결 실패', true); }
+function settingValue(key) {
+  const values = {
+    p1Name: () => $('p1Name').value,
+    p1Deck: () => $('p1Deck').value,
+    p2Name: () => $('p2Name').value,
+    p2Deck: () => $('p2Deck').value,
+    tournamentName: () => $('tournamentName').value,
+    matchTarget: () => parseInt($('matchTarget').value, 10),
+    mainTimerSeconds: () => Math.max(60, parseInt($('mainTimerMinutes').value || '40', 10) * 60),
+    extraTurnSeconds: () => Math.max(0, parseInt($('extraTurnMinutes').value || '15', 10) * 60),
+    leftImg1: () => $('leftImg1').value,
+    leftImg2: () => $('leftImg2').value,
+    rightImg1: () => $('rightImg1').value,
+    rightImg2: () => $('rightImg2').value,
+    leftImg1Source: () => state.leftImg1Source || '',
+    leftImg2Source: () => state.leftImg2Source || '',
+    rightImg1Source: () => state.rightImg1Source || '',
+    rightImg2Source: () => state.rightImg2Source || '',
+  };
+  return values[key] ? values[key]() : state[key];
+}
+
+function push(fields = []) {
+  const flushImmediately = fields.some(key => key.endsWith('Img1') || key.endsWith('Img2') || key.endsWith('Source'));
+  fields.forEach(key => pendingSettingsFields.add(key));
+  clearTimeout(settingsPushTimer);
+  const requestId = ++settingsRequestId;
+  settingsPushTimer = setTimeout(async () => {
+    const uniqueFields = [...pendingSettingsFields];
+    pendingSettingsFields = new Set();
+    if (!uniqueFields.length) return;
+    const payload = Object.fromEntries(uniqueFields.map(key => [key, settingValue(key)]));
+    uniqueFields.forEach(key => { state[key] = payload[key]; });
+    $('score-p1-label').textContent = $('p1Name').value || '플레이어 1';
+    $('score-p2-label').textContent = $('p2Name').value || '플레이어 2';
+    try {
+      const res = await fetch('/api/settings', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+      const result = await res.json();
+      if (!result.ok) throw new Error(result.error || 'settings failed');
+      if (requestId === settingsRequestId) applyServerState(result.state, false);
+      showStatus('저장됨');
+    } catch (e) {
+      uniqueFields.forEach(key => pendingSettingsFields.add(key));
+      showStatus('서버 연결 실패', true);
+    }
+  }, flushImmediately ? 0 : 180);
 }
 
 async function loadState() {
   try {
     const res = await fetch('/api/state?_=' + Date.now());
     const s = await res.json();
+    applyServerState(s, true);
+  } catch (e) {}
+}
+
+function applyServerState(s, syncInputs) {
     state = { ...state, ...s };
-    ['p1Name','p1Deck','p2Name','p2Deck','tournamentName','leftImg1','leftImg2','rightImg1','rightImg2'].forEach(id => setInputValue(id, state[id]));
+    if (syncInputs) {
+      ['p1Name','p1Deck','p2Name','p2Deck','tournamentName','leftImg1','leftImg2','rightImg1','rightImg2'].forEach(id => setInputValue(id, state[id]));
+    }
     $('matchTarget').value = String(state.matchTarget || 2);
     $('mainTimerMinutes').value = Math.round((state.mainTimerSeconds || state.timerSeconds || 2400) / 60);
     $('extraTurnMinutes').value = Math.round((state.extraTurnSeconds || 900) / 60);
@@ -462,11 +657,9 @@ async function loadState() {
     $('score-p1-label').textContent = state.p1Name || '플레이어 1';
     $('score-p2-label').textContent = state.p2Name || '플레이어 2';
     remainingSeconds = state.timerSeconds ?? state.mainTimerSeconds ?? 2400;
-    stopTimer();
-    if (state.timerRunning) startLocalTimer();
+    timerBaseAt = Date.parse(state.updatedAt || '') || Date.now();
     updateTimerButton();
     updateTimerUI();
-  } catch (e) {}
 }
 
 function updateNamePreviews() {
@@ -474,8 +667,17 @@ function updateNamePreviews() {
   $('p2NamePreview').textContent = $('p2Name').value.trim() || '플레이어 2';
 }
 
-function setInputValue(id, value) { const el = $(id); if (el) el.value = value || ''; }
+function setInputValue(id, value) {
+  const el = $(id);
+  if (el && document.activeElement !== el) el.value = value || '';
+}
 function triggerFile(id) { $(id).click(); }
+function sourceKeyFor(key) { return `${key}Source`; }
+
+function editOrSelectImage(key, prevId, phId, cropType, fileInputId) {
+  if ($(key).value.trim()) editCurrentImage(key, prevId, phId, cropType);
+  else triggerFile(fileInputId);
+}
 
 function onFile(input, key, prevId, phId, cropType) {
   const file = input.files[0];
@@ -484,10 +686,61 @@ function onFile(input, key, prevId, phId, cropType) {
   const reader = new FileReader();
   reader.onload = () => {
     const img = new Image();
-    img.onload = () => openCropModal({ image: img, key, prevId, phId, cropType, filename: file.name });
+    img.onload = () => openCropModal({
+      image: img,
+      key,
+      sourceKey: sourceKeyFor(key),
+      originalFile: file,
+      originalSource: reader.result,
+      prevId,
+      phId,
+      cropType,
+      filename: file.name,
+    });
     img.src = reader.result;
   };
   reader.readAsDataURL(file);
+}
+
+function editableImageUrl(source) {
+  if (/^(data:|blob:)/i.test(source)) return source;
+  const parsed = new URL(source, window.location.href);
+  const sameServerHost = parsed.port === window.location.port && ['localhost', '127.0.0.1', window.location.hostname].includes(parsed.hostname);
+  if (parsed.origin === window.location.origin || sameServerHost) return `${parsed.pathname}${parsed.search}`;
+  return `/api/image-proxy?url=${encodeURIComponent(parsed.href)}`;
+}
+
+function sourceFilename(source) {
+  try {
+    const pathname = new URL(source, window.location.href).pathname;
+    return decodeURIComponent(pathname.split('/').pop() || 'deck-image.jpg');
+  } catch (e) {
+    return 'deck-image.jpg';
+  }
+}
+
+function editCurrentImage(key, prevId, phId, cropType) {
+  const sourceKey = sourceKeyFor(key);
+  const source = state[sourceKey] || $(key).value.trim();
+  if (!source) { showStatus('먼저 이미지를 선택하세요.', true); return; }
+  showStatus('편집할 이미지를 불러오는 중입니다.');
+  const img = new Image();
+  img.onload = () => openCropModal({
+    image: img,
+    key,
+    sourceKey,
+    originalSource: source,
+    prevId,
+    phId,
+    cropType,
+    filename: sourceFilename(source),
+  });
+  img.onerror = () => showStatus('이미지를 편집기로 불러오지 못했습니다.', true);
+  try {
+    img.src = editableImageUrl(source);
+  } catch (e) {
+    showStatus('이미지 주소가 올바르지 않습니다.', true);
+  }
 }
 
 function openCropModal(options) {
@@ -507,9 +760,15 @@ function openCropModal(options) {
   const canvas = $('cropCanvas');
   canvas.width = cropState.outputWidth;
   canvas.height = cropState.outputHeight;
+  const cropViewport = $('cropViewport');
+  cropViewport.style.setProperty('--crop-ratio', `${cropState.outputWidth}/${cropState.outputHeight}`);
+  cropViewport.style.setProperty('--crop-ratio-value', String(cropState.outputWidth / cropState.outputHeight));
+  $('cropFrameLabel').textContent = `실제 송출 영역 · ${cropState.outputWidth} × ${cropState.outputHeight}`;
   $('cropZoom').value = '1';
   $('cropX').value = '0';
   $('cropY').value = '0';
+  $('cropFlipBtn').classList.remove('active');
+  $('cropFlipBtn').textContent = '좌우반전';
   $('cropModal').classList.add('open');
   drawCropCanvas();
 }
@@ -535,6 +794,8 @@ function setCropOffset(axis, value) {
 function toggleCropFlip() {
   if (!cropState) return;
   cropState.flip = !cropState.flip;
+  $('cropFlipBtn').classList.toggle('active', cropState.flip);
+  $('cropFlipBtn').textContent = cropState.flip ? '좌우반전 적용됨' : '좌우반전';
   drawCropCanvas();
 }
 
@@ -563,24 +824,44 @@ function drawCropCanvas() {
   ctx.restore();
 }
 
+function fileExtension(filename) {
+  const match = String(filename || '').match(/\.([a-zA-Z0-9]+)$/);
+  return match ? match[1].toLowerCase() : 'jpg';
+}
+
+async function uploadImageBlob(blob, filename) {
+  const formData = new FormData();
+  formData.append('file', blob, filename);
+  const res = await fetch('/upload', { method:'POST', body:formData });
+  const result = await res.json();
+  if (!result.ok) throw new Error(result.error || 'upload failed');
+  return '/' + result.path.replace(/^\/+/, '');
+}
+
 async function confirmCrop() {
   if (!cropState) return;
   const canvas = $('cropCanvas');
   canvas.toBlob(async (blob) => {
     if (!blob) { showStatus('이미지 생성 실패', true); return; }
     try {
-      const formData = new FormData();
-      const safeName = cropState.filename.replace(/\.[^.]+$/, '') + '-crop.jpg';
-      formData.append('file', blob, safeName);
-      const res = await fetch('/upload', { method:'POST', body:formData });
-      const result = await res.json();
-      if (!result.ok) throw new Error(result.error || 'upload failed');
-      const serverUrl = 'http://localhost:8000/' + result.path;
+      const baseName = cropState.filename.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9_-]+/g, '-') || 'deck-image';
+      const stamp = Date.now();
+      let originalUrl = cropState.originalSource || state[cropState.sourceKey] || '';
+      if (cropState.originalFile) {
+        const extension = fileExtension(cropState.originalFile.name);
+        originalUrl = await uploadImageBlob(
+          cropState.originalFile,
+          `${baseName}-original-${stamp}.${extension}`
+        );
+      }
+      const serverUrl = await uploadImageBlob(blob, `${baseName}-crop-${stamp}.jpg`);
       $(cropState.key).value = serverUrl;
       state[cropState.key] = serverUrl;
+      state[cropState.sourceKey] = originalUrl || serverUrl;
       setPreview(cropState.prevId, cropState.phId, serverUrl);
+      const fields = [cropState.key, cropState.sourceKey];
       closeCropModal();
-      push();
+      push(fields);
       showStatus('이미지 적용됨');
     } catch (e) {
       showStatus('이미지 업로드 실패', true);
@@ -610,28 +891,52 @@ cropCanvas.addEventListener('pointermove', (event) => {
 });
 cropCanvas.addEventListener('pointerup', () => { if (cropState) cropState.dragging = false; });
 
-function onPath(key, prevId, phId) { state[key] = $(key).value.trim(); setPreview(prevId, phId, state[key]); push(); }
-function clearImg(key, prevId, phId) { $(key).value = ''; state[key] = ''; setPreview(prevId, phId, ''); push(); }
+function onPath(key, prevId, phId) {
+  const sourceKey = sourceKeyFor(key);
+  state[key] = $(key).value.trim();
+  state[sourceKey] = state[key];
+  setPreview(prevId, phId, state[key]);
+  push([key, sourceKey]);
+}
+function clearImg(key, prevId, phId) {
+  const sourceKey = sourceKeyFor(key);
+  $(key).value = '';
+  state[key] = '';
+  state[sourceKey] = '';
+  setPreview(prevId, phId, '');
+  push([key, sourceKey]);
+}
 function setPreview(prevId, phId, src) {
   const img = $(prevId);
   const ph = $(phId);
   const wrap = img?.closest('.preview');
+  const editButton = $(prevId.replace('-preview', '-edit'));
   if (!img || !ph) return;
-  if (src) { img.src = src; img.classList.add('loaded'); ph.style.display = 'none'; wrap?.classList.add('has-image'); }
-  else { img.src = ''; img.classList.remove('loaded'); ph.style.display = ''; wrap?.classList.remove('has-image'); }
+  if (src) {
+    img.src = src;
+    img.classList.add('loaded');
+    ph.style.display = 'none';
+    wrap?.classList.add('has-image');
+    if (editButton) editButton.disabled = false;
+  } else {
+    img.src = '';
+    img.classList.remove('loaded');
+    ph.style.display = '';
+    wrap?.classList.remove('has-image');
+    if (editButton) editButton.disabled = true;
+  }
 }
 
 function changeScore(side, delta) {
-  if (side === 'left') state.scoreLeft = Math.max(0, (state.scoreLeft || 0) + delta);
-  else state.scoreRight = Math.max(0, (state.scoreRight || 0) + delta);
-  $('scoreL').textContent = state.scoreLeft || 0;
-  $('scoreR').textContent = state.scoreRight || 0;
-  push();
+  const scoreLeft = side === 'left' ? Math.max(0, (state.scoreLeft || 0) + delta) : state.scoreLeft || 0;
+  const scoreRight = side === 'right' ? Math.max(0, (state.scoreRight || 0) + delta) : state.scoreRight || 0;
+  sendAction({action:'set_score', scoreLeft, scoreRight}, '점수 반영');
 }
-function resetScore() { state.scoreLeft = 0; state.scoreRight = 0; $('scoreL').textContent = '0'; $('scoreR').textContent = '0'; push(); }
+function resetScore() { sendAction({action:'set_score', scoreLeft:0, scoreRight:0}, '점수 초기화'); }
 
 function updateTimerUI() {
-  const value = Math.floor(remainingSeconds || 0);
+  const elapsed = state.timerRunning ? Math.max(0, Math.floor((Date.now() - timerBaseAt) / 1000)) : 0;
+  const value = Math.floor((remainingSeconds || 0) - elapsed);
   let text;
   if (value < 0 && state.extraTurnSeconds > 0) {
     const extraRemaining = state.extraTurnSeconds + value;
@@ -647,23 +952,29 @@ function updateTimerUI() {
   el.classList.toggle('warning', remainingSeconds > 0 && remainingSeconds <= 180);
 }
 function updateTimerButton() {
-  $('startStopBtn').textContent = timerRunning ? '일시정지' : '시작';
-  $('startStopBtn').className = timerRunning ? 'btn-orange' : 'btn-green';
+  $('startStopBtn').textContent = state.timerRunning ? '일시정지' : '시작';
+  $('startStopBtn').className = state.timerRunning ? 'btn-orange' : 'btn-green';
 }
-function toggleTimer() { timerRunning ? stopTimer() : startLocalTimer(); updateTimerButton(); push(); }
-function startLocalTimer() {
-  if (timerRunning) return;
-  timerRunning = true;
-  timerInterval = setInterval(() => { remainingSeconds--; updateTimerUI(); state.timerSeconds = remainingSeconds; fetch('/api/state', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(state) }).catch(()=>{}); }, 1000);
+async function sendAction(payload, successMessage = '반영됨') {
+  try {
+    const res = await fetch('/api/action', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+    const result = await res.json();
+    if (!result.ok) throw new Error(result.error || 'action failed');
+    applyServerState(result.state, true);
+    showStatus(successMessage);
+    return result;
+  } catch (e) {
+    showStatus('처리 실패', true);
+    return null;
+  }
 }
-function stopTimer() { timerRunning = false; clearInterval(timerInterval); }
-function resetTimer() { stopTimer(); remainingSeconds = state.mainTimerSeconds || 2400; state.timerSeconds = remainingSeconds; updateTimerButton(); updateTimerUI(); push(); }
+function toggleTimer() { sendAction({action:'toggle_timer'}, state.timerRunning ? '타이머 일시정지' : '타이머 시작'); }
+function resetTimer() { sendAction({action:'reset_timer'}, '타이머 초기화'); }
 
-function resetAll() {
+async function resetAll() {
   if (!confirm('모든 정보를 초기화할까요?')) return;
-  stopTimer();
-  remainingSeconds = 2400;
-  state = { ...state, p1Name:'', p1Deck:'', p2Name:'', p2Deck:'', scoreLeft:0, scoreRight:0, timerSeconds:2400, timerRunning:false, mainTimerSeconds:2400, extraTurnSeconds:900, matchTarget:2, leftImg1:'', leftImg2:'', rightImg1:'', rightImg2:'', p1CardImg:'', p2CardImg:'' };
+  await sendAction({action:'reset_match'}, '매치 초기화');
+  state = { ...state, p1Name:'', p1Deck:'', p2Name:'', p2Deck:'', scoreLeft:0, scoreRight:0, timerSeconds:2400, timerRunning:false, mainTimerSeconds:2400, extraTurnSeconds:900, matchTarget:2, leftImg1:'', leftImg2:'', rightImg1:'', rightImg2:'', leftImg1Source:'', leftImg2Source:'', rightImg1Source:'', rightImg2Source:'', p1CardImg:'', p2CardImg:'' };
   ['p1Name','p1Deck','p2Name','p2Deck','leftImg1','leftImg2','rightImg1','rightImg2'].forEach(id => setInputValue(id, ''));
   $('matchTarget').value = '2';
   $('mainTimerMinutes').value = '40';
@@ -674,7 +985,7 @@ function resetAll() {
   updateNamePreviews();
   updateTimerButton();
   updateTimerUI();
-  push();
+  push(['p1Name','p1Deck','p2Name','p2Deck','matchTarget','mainTimerSeconds','extraTurnSeconds','leftImg1','leftImg2','rightImg1','rightImg2','leftImg1Source','leftImg2Source','rightImg1Source','rightImg2Source']);
 }
 
 loadState();
@@ -682,6 +993,8 @@ loadTabletConnection();
 loadDeckPresets();
 loadRulePresets();
 setInterval(loadTabletConnection, 10000);
+setInterval(loadState, 800);
+setInterval(updateTimerUI, 250);
 </script>
 </body>
 </html>

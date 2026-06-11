@@ -37,11 +37,15 @@
   .setup-side { font-family:'Bebas Neue',sans-serif; color:var(--gold); font-size:clamp(36px,7vw,76px); line-height:.9; }
   .setup-name { max-width:100%; font-size:clamp(24px,4.6vw,48px); font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .setup-hint { color:#ffbc73; font-size:clamp(14px,1.8vw,20px); font-weight:900; }
-  .score-view { min-height:0; display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:center; gap:12px; padding:0 6px; }
-  .score-timer { grid-column:1/-1; color:var(--gold2); font-family:'Bebas Neue',sans-serif; font-size:clamp(38px,7.2vw,78px); line-height:.75; text-align:center; letter-spacing:0; }
-  .player-name { min-height:28px; color:var(--muted); font-size:clamp(16px,2.2vw,28px); font-weight:900; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .score { font-family:'Bebas Neue',sans-serif; font-size:clamp(130px,28vw,320px); line-height:.72; text-align:center; letter-spacing:0; }
-  .colon { font-family:'Bebas Neue',sans-serif; color:var(--gold); font-size:clamp(86px,15vw,180px); line-height:.7; padding-bottom:20px; }
+  .score-view { min-height:0; display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); grid-template-rows:auto auto auto; align-content:center; align-items:start; column-gap:18px; row-gap:16px; padding:20px 6px; }
+  .score-timer { grid-column:1/-1; color:var(--gold2); font-family:'Bebas Neue',sans-serif; font-size:clamp(46px,7.2vw,82px); line-height:.8; text-align:center; letter-spacing:0; margin-bottom:clamp(34px,7vh,82px); }
+  .player-name { min-width:0; min-height:52px; margin-top:-10px; margin-bottom:8px; color:var(--text); font-size:clamp(28px,3.6vw,48px); line-height:1.1; font-weight:900; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-shadow:0 3px 10px rgba(0,0,0,.75); }
+  .player-name.left { grid-column:1; grid-row:2; }
+  .player-name.right { grid-column:3; grid-row:2; }
+  .score { grid-row:3; font-family:'Bebas Neue',sans-serif; font-size:clamp(120px,24vw,280px); line-height:.72; text-align:center; letter-spacing:0; }
+  .score.left { grid-column:1; }
+  .score.right { grid-column:3; }
+  .colon { grid-column:2; grid-row:3; align-self:center; font-family:'Bebas Neue',sans-serif; color:var(--gold); font-size:clamp(76px,13vw,150px); line-height:.7; }
   .dock { background:rgba(17,21,33,.97); border:1px solid var(--line); border-radius:8px; padding:10px; display:grid; gap:8px; }
   .dock-main { width:100%; min-height:64px; font-size:26px; }
   #prestart-start { min-height:86px; font-size:34px; }
@@ -72,7 +76,7 @@
   @media (max-width:760px) {
     .brand span { display:none; }
     .setup-view { min-height:50dvh; }
-    .score { font-size:clamp(110px,27vw,250px); }
+    .score { font-size:clamp(105px,23vw,220px); }
     .judge { min-width:108px; font-size:15px; }
   }
   @media (max-width:560px) {
@@ -111,15 +115,11 @@
 
   <section class="score-view hidden" id="score-view">
     <div class="score-timer" id="score-timer">40:00</div>
-    <div>
-      <div class="player-name" id="left-name">왼쪽</div>
-      <div class="score" id="left-score">0</div>
-    </div>
+    <div class="player-name left" id="left-name">왼쪽</div>
+    <div class="player-name right" id="right-name">오른쪽</div>
+    <div class="score left" id="left-score">0</div>
     <div class="colon">:</div>
-    <div>
-      <div class="player-name" id="right-name">오른쪽</div>
-      <div class="score" id="right-score">0</div>
-    </div>
+    <div class="score right" id="right-score">0</div>
   </section>
 
   <footer class="dock">
@@ -334,17 +334,17 @@ async function requestFullscreenMode() {
 }
 async function savePlayerSetup() {
   if (!state || !modalSide || busy) return;
-  const nextState = { ...state };
+  const nextSettings = {};
   if (modalSide === 'left') {
-    nextState.p1Name = $('modal-name').value.trim();
-    nextState.p1Deck = $('modal-deck').value.trim();
+    nextSettings.p1Name = $('modal-name').value.trim();
+    nextSettings.p1Deck = $('modal-deck').value.trim();
   } else {
-    nextState.p2Name = $('modal-name').value.trim();
-    nextState.p2Deck = $('modal-deck').value.trim();
+    nextSettings.p2Name = $('modal-name').value.trim();
+    nextSettings.p2Deck = $('modal-deck').value.trim();
   }
   busy = true;
   try {
-    const res = await fetch('/api/state', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(nextState) });
+    const res = await fetch('/api/settings', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(nextSettings) });
     const result = await res.json();
     if (!result.ok) throw new Error(result.error || 'save failed');
     closePlayerModal();

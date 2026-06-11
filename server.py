@@ -7,10 +7,12 @@ import sys
 import threading
 import uuid
 import webbrowser
+import re
 from datetime import datetime
 from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
+from urllib.request import Request, urlopen
 
 import qrcode
 import qrcode.image.svg
@@ -40,6 +42,27 @@ STATE_FILE = os.path.join(DATA_DIR, "state.json")
 EVENTS_FILE = os.path.join(DATA_DIR, "events.jsonl")
 PRESETS_FILE = os.path.join(DATA_DIR, "deck_presets.json")
 RULE_PRESETS_FILE = os.path.join(DATA_DIR, "rule_presets.json")
+STATE_LOCK = threading.RLock()
+
+SETTINGS_FIELDS = {
+    "p1Name",
+    "p1Deck",
+    "p2Name",
+    "p2Deck",
+    "tournamentName",
+    "roundName",
+    "matchTarget",
+    "mainTimerSeconds",
+    "extraTurnSeconds",
+    "leftImg1",
+    "leftImg2",
+    "rightImg1",
+    "rightImg2",
+    "leftImg1Source",
+    "leftImg2Source",
+    "rightImg1Source",
+    "rightImg2Source",
+}
 
 MATCH_FIELDS = [
     "matchId",
@@ -77,6 +100,10 @@ DEFAULT_STATE = {
     "leftImg2": "",
     "rightImg1": "",
     "rightImg2": "",
+    "leftImg1Source": "",
+    "leftImg2Source": "",
+    "rightImg1Source": "",
+    "rightImg2Source": "",
     "p1CardImg": "",
     "p2CardImg": "",
     "matchId": "",
@@ -146,12 +173,34 @@ def normalize_state(data):
     if state.get("judgePreviousPhase") not in {"idle", "round_waiting", "dueling", "sideboarding", "finished"}:
         state["judgePreviousPhase"] = ""
 
+    image_pairs = (
+        ("leftImg1", "leftImg1Source"),
+        ("leftImg2", "leftImg2Source"),
+        ("rightImg1", "rightImg1Source"),
+        ("rightImg2", "rightImg2Source"),
+    )
+    for image_key, source_key in image_pairs:
+        state[image_key] = str(state.get(image_key, "") or "")
+        source = str(state.get(source_key, "") or "")
+        state[source_key] = source or infer_original_source(state[image_key])
+
     return state
+
+
+def infer_original_source(image_url):
+    image_url = str(image_url or "").strip()
+    if not image_url:
+        return ""
+    basename = os.path.basename(urlparse(image_url).path)
+    match = re.match(r"(.+?)-crop-\d+(?:-crop-\d+)*\.jpe?g$", basename, re.IGNORECASE)
+    if match and len(match.group(1)) >= 80:
+        return f"https://i.namu.wiki/i/{match.group(1)}.webp"
+    return image_url
 
 
 def read_state():
     try:
-        with open(STATE_FILE, "r", encoding="utf-8") as f:
+        with open(STATE_FILE, "r", encoding="utf-8-sig") as f:
             return normalize_state(json.load(f))
     except Exception:
         return normalize_state({})
@@ -161,9 +210,15 @@ def write_state(data):
     state = normalize_state(data)
     state = apply_deck_presets_to_state(state)
     save_deck_presets_from_state(state)
-    with open(STATE_FILE, "w", encoding="utf-8") as f:
-        json.dump(state, f, ensure_ascii=False, indent=2)
+    write_json_atomic(STATE_FILE, state)
     return state
+
+
+def write_json_atomic(path, payload):
+    temp_path = f"{path}.{uuid.uuid4().hex}.tmp"
+    with open(temp_path, "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2)
+    os.replace(temp_path, path)
 
 
 def normalize_deck_name(name):
@@ -174,7 +229,7 @@ def read_deck_presets():
     if not os.path.exists(PRESETS_FILE):
         return {}
     try:
-        with open(PRESETS_FILE, "r", encoding="utf-8") as f:
+        with open(PRESETS_FILE, "r", encoding="utf-8-sig") as f:
             data = json.load(f)
     except Exception:
         return {}
@@ -189,14 +244,15 @@ def read_deck_presets():
             "deckName": deck_name,
             "image1": str(preset.get("image1", "") or ""),
             "image2": str(preset.get("image2", "") or ""),
+            "sourceImage1": str(preset.get("sourceImage1", preset.get("image1", "")) or ""),
+            "sourceImage2": str(preset.get("sourceImage2", preset.get("image2", "")) or ""),
             "updatedAt": str(preset.get("updatedAt", "") or ""),
         }
     return presets
 
 
 def write_deck_presets(presets):
-    with open(PRESETS_FILE, "w", encoding="utf-8") as f:
-        json.dump(presets, f, ensure_ascii=False, indent=2)
+    write_json_atomic(PRESETS_FILE, presets)
 
 
 def normalize_preset_name(name):
@@ -207,7 +263,7 @@ def read_rule_presets():
     if not os.path.exists(RULE_PRESETS_FILE):
         return {}
     try:
-        with open(RULE_PRESETS_FILE, "r", encoding="utf-8") as f:
+        with open(RULE_PRESETS_FILE, "r", encoding="utf-8-sig") as f:
             data = json.load(f)
     except Exception:
         return {}
@@ -242,17 +298,16 @@ def read_rule_presets():
 
 
 def write_rule_presets(presets):
-    with open(RULE_PRESETS_FILE, "w", encoding="utf-8") as f:
-        json.dump(presets, f, ensure_ascii=False, indent=2)
+    write_json_atomic(RULE_PRESETS_FILE, presets)
 
 
 def apply_deck_presets_to_state(state):
     presets = read_deck_presets()
     sides = (
-        ("p1Deck", "leftImg1", "leftImg2"),
-        ("p2Deck", "rightImg1", "rightImg2"),
+        ("p1Deck", "leftImg1", "leftImg2", "leftImg1Source", "leftImg2Source"),
+        ("p2Deck", "rightImg1", "rightImg2", "rightImg1Source", "rightImg2Source"),
     )
-    for deck_key, image1_key, image2_key in sides:
+    for deck_key, image1_key, image2_key, source1_key, source2_key in sides:
         preset = presets.get(normalize_deck_name(state.get(deck_key)))
         if not preset:
             continue
@@ -260,6 +315,10 @@ def apply_deck_presets_to_state(state):
             state[image1_key] = preset.get("image1", "")
         if not state.get(image2_key):
             state[image2_key] = preset.get("image2", "")
+        if not state.get(source1_key):
+            state[source1_key] = preset.get("sourceImage1", preset.get("image1", ""))
+        if not state.get(source2_key):
+            state[source2_key] = preset.get("sourceImage2", preset.get("image2", ""))
     return state
 
 
@@ -267,19 +326,32 @@ def save_deck_presets_from_state(state):
     presets = read_deck_presets()
     changed = False
     sides = (
-        ("p1Deck", "leftImg1", "leftImg2"),
-        ("p2Deck", "rightImg1", "rightImg2"),
+        ("p1Deck", "leftImg1", "leftImg2", "leftImg1Source", "leftImg2Source"),
+        ("p2Deck", "rightImg1", "rightImg2", "rightImg1Source", "rightImg2Source"),
     )
-    for deck_key, image1_key, image2_key in sides:
+    for deck_key, image1_key, image2_key, source1_key, source2_key in sides:
         deck_name = normalize_deck_name(state.get(deck_key))
         image1 = str(state.get(image1_key, "") or "").strip()
         image2 = str(state.get(image2_key, "") or "").strip()
+        source1 = str(state.get(source1_key, "") or "").strip() or image1
+        source2 = str(state.get(source2_key, "") or "").strip() or image2
         if not deck_name or not image1 or not image2:
+            continue
+        existing = presets.get(deck_name)
+        if (
+            existing
+            and existing.get("image1") == image1
+            and existing.get("image2") == image2
+            and existing.get("sourceImage1", existing.get("image1")) == source1
+            and existing.get("sourceImage2", existing.get("image2")) == source2
+        ):
             continue
         next_preset = {
             "deckName": deck_name,
             "image1": image1,
             "image2": image2,
+            "sourceImage1": source1,
+            "sourceImage2": source2,
             "updatedAt": now_iso(),
         }
         if presets.get(deck_name) != next_preset:
@@ -293,7 +365,7 @@ def read_events():
     events = []
     if not os.path.exists(EVENTS_FILE):
         return events
-    with open(EVENTS_FILE, "r", encoding="utf-8") as f:
+    with open(EVENTS_FILE, "r", encoding="utf-8-sig") as f:
         for line in f:
             line = line.strip()
             if not line:
@@ -332,6 +404,39 @@ def settle_timer(state, timestamp):
         state["timerSeconds"] = int(state.get("timerSeconds", 0)) - elapsed
         state["updatedAt"] = timestamp
     return state
+
+
+def live_state():
+    timestamp = now_iso()
+    state = settle_timer(read_state(), timestamp)
+    state["updatedAt"] = timestamp
+    return state
+
+
+def update_settings(payload):
+    timestamp = now_iso()
+    state = settle_timer(read_state(), timestamp)
+    previous_decks = {"p1Deck": state.get("p1Deck", ""), "p2Deck": state.get("p2Deck", "")}
+
+    for key in SETTINGS_FIELDS:
+        if key in payload:
+            state[key] = payload[key]
+
+    for deck_key, image_keys in (
+        ("p1Deck", ("leftImg1", "leftImg2", "leftImg1Source", "leftImg2Source")),
+        ("p2Deck", ("rightImg1", "rightImg2", "rightImg1Source", "rightImg2Source")),
+    ):
+        if deck_key in payload and normalize_deck_name(payload.get(deck_key)) != normalize_deck_name(previous_decks[deck_key]):
+            if not any(key in payload for key in image_keys):
+                for key in image_keys:
+                    state[key] = ""
+
+    if state.get("phase") in {"idle", "round_waiting"} and not state.get("timerRunning"):
+        if "mainTimerSeconds" in payload:
+            state["timerSeconds"] = state["mainTimerSeconds"]
+
+    state["updatedAt"] = timestamp
+    return write_state(state)
 
 
 def apply_action(payload):
@@ -463,6 +568,33 @@ def apply_action(payload):
             "time": timestamp,
             "scoreLeft": state["scoreLeft"],
             "scoreRight": state["scoreRight"],
+        }
+
+    elif action == "toggle_timer":
+        state.update(
+            {
+                "timerRunning": not bool(state.get("timerRunning")),
+                "updatedAt": timestamp,
+            }
+        )
+        event = {
+            "type": "timer_start" if state["timerRunning"] else "timer_pause",
+            "time": timestamp,
+            "timerSeconds": state["timerSeconds"],
+        }
+
+    elif action == "reset_timer":
+        state.update(
+            {
+                "timerSeconds": state.get("mainTimerSeconds", DEFAULT_STATE["mainTimerSeconds"]),
+                "timerRunning": False,
+                "updatedAt": timestamp,
+            }
+        )
+        event = {
+            "type": "timer_reset",
+            "time": timestamp,
+            "timerSeconds": state["timerSeconds"],
         }
 
     elif action == "undo":
@@ -890,6 +1022,15 @@ class Handler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def send_bytes(self, body, content_type="application/octet-stream"):
+        self.send_response(HTTPStatus.OK)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(body)
+
     def read_json_body(self):
         length = int(self.headers.get("Content-Length", 0))
         if length <= 0:
@@ -900,7 +1041,8 @@ class Handler(SimpleHTTPRequestHandler):
         parsed = urlparse(self.path)
         path = parsed.path
         if path in {"/state", "/api/state"}:
-            self.send_json(read_state())
+            with STATE_LOCK:
+                self.send_json(live_state())
             return
         if path == "/api/connect-info":
             host = get_lan_ip()
@@ -935,6 +1077,32 @@ class Handler(SimpleHTTPRequestHandler):
             except Exception as e:
                 self.send_json({"ok": False, "error": str(e)}, HTTPStatus.BAD_REQUEST)
             return
+        if path == "/api/image-proxy":
+            if self.client_address[0] not in {"127.0.0.1", "::1"}:
+                self.send_json({"ok": False, "error": "local access only"}, HTTPStatus.FORBIDDEN)
+                return
+            query = parse_qs(parsed.query)
+            image_url = query.get("url", [""])[0].strip()
+            parsed_image_url = urlparse(image_url)
+            if parsed_image_url.scheme not in {"http", "https"}:
+                self.send_json({"ok": False, "error": "http(s) image URL is required"}, HTTPStatus.BAD_REQUEST)
+                return
+            try:
+                request = Request(image_url, headers={"User-Agent": "Marineford-OBS/1.5"})
+                with urlopen(request, timeout=10) as response:
+                    final_url = urlparse(response.geturl())
+                    content_type = response.headers.get_content_type()
+                    body = response.read(12 * 1024 * 1024 + 1)
+                if final_url.scheme not in {"http", "https"}:
+                    raise ValueError("unsupported redirect")
+                if not content_type.startswith("image/"):
+                    raise ValueError("URL did not return an image")
+                if len(body) > 12 * 1024 * 1024:
+                    raise ValueError("image is larger than 12 MB")
+                self.send_bytes(body, content_type)
+            except Exception as e:
+                self.send_json({"ok": False, "error": str(e)}, HTTPStatus.BAD_REQUEST)
+            return
         if path == "/api/events":
             events = read_events()
             self.send_json({"events": events, "segments": build_segments(events)})
@@ -963,19 +1131,26 @@ class Handler(SimpleHTTPRequestHandler):
         if path in {"/state", "/api/state"}:
             try:
                 data = self.read_json_body()
-                current = read_state()
-                if current.get("phase") in {"judge_call", "finished"} and data.get("phase") != current.get("phase"):
-                    data = current.copy()
-                    data["timerRunning"] = False
-                data["updatedAt"] = now_iso()
-                self.send_json({"ok": True, "state": write_state(data)})
+                with STATE_LOCK:
+                    state = update_settings(data)
+                self.send_json({"ok": True, "state": state})
             except Exception as e:
                 self.send_json({"ok": False, "error": str(e)}, HTTPStatus.INTERNAL_SERVER_ERROR)
             return
 
+        if path == "/api/settings":
+            try:
+                with STATE_LOCK:
+                    state = update_settings(self.read_json_body())
+                self.send_json({"ok": True, "state": state})
+            except Exception as e:
+                self.send_json({"ok": False, "error": str(e)}, HTTPStatus.BAD_REQUEST)
+            return
+
         if path == "/api/action":
             try:
-                _, response = apply_action(self.read_json_body())
+                with STATE_LOCK:
+                    _, response = apply_action(self.read_json_body())
                 self.send_json(response)
             except Exception as e:
                 self.send_json({"ok": False, "error": str(e)}, HTTPStatus.BAD_REQUEST)
@@ -987,6 +1162,8 @@ class Handler(SimpleHTTPRequestHandler):
                 deck_name = normalize_deck_name(payload.get("deckName"))
                 image1 = str(payload.get("image1", "") or "").strip()
                 image2 = str(payload.get("image2", "") or "").strip()
+                source_image1 = str(payload.get("sourceImage1", image1) or "").strip()
+                source_image2 = str(payload.get("sourceImage2", image2) or "").strip()
                 if not deck_name:
                     raise ValueError("deckName is required")
                 if not image1 or not image2:
@@ -996,6 +1173,8 @@ class Handler(SimpleHTTPRequestHandler):
                     "deckName": deck_name,
                     "image1": image1,
                     "image2": image2,
+                    "sourceImage1": source_image1 or image1,
+                    "sourceImage2": source_image2 or image2,
                     "updatedAt": now_iso(),
                 }
                 write_deck_presets(presets)

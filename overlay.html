@@ -13,7 +13,7 @@
   .player { min-width:0; padding-top:8px; }
   .player.right { text-align:right; }
   .name { min-width:0; font-size:58px; font-weight:900; line-height:1; text-shadow:0 4px 14px rgba(0,0,0,.9); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .scoreline { color:var(--gold); font-family:'Bebas Neue',sans-serif; font-size:24px; letter-spacing:.12em; margin-top:8px; text-shadow:0 3px 10px rgba(0,0,0,.85); }
+  .deck-name { min-height:44px; color:var(--gold2); font-size:36px; line-height:1.1; font-weight:900; margin-top:12px; text-shadow:0 3px 10px rgba(0,0,0,.85); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .center { display:grid; justify-items:center; gap:6px; min-width:560px; }
   #timer-display { font-family:'Bebas Neue',sans-serif; color:var(--gold2); font-size:78px; line-height:.86; letter-spacing:0; text-shadow:0 4px 12px rgba(0,0,0,.85); }
   #timer-display.warning { color:#ffbc73; }
@@ -42,7 +42,7 @@
   <div class="top">
     <div class="player">
       <div class="name" id="p1-name"></div>
-      <div class="scoreline">PLAYER 1</div>
+      <div class="deck-name" id="p1-deck"></div>
     </div>
     <div class="center">
       <div id="timer-display">40:00</div>
@@ -51,7 +51,7 @@
     </div>
     <div class="player right">
       <div class="name" id="p2-name"></div>
-      <div class="scoreline">PLAYER 2</div>
+      <div class="deck-name" id="p2-deck"></div>
     </div>
   </div>
 
@@ -92,6 +92,8 @@ function applyState(s) {
   if (!s) return;
   document.getElementById('p1-name').textContent = s.p1Name || '';
   document.getElementById('p2-name').textContent = s.p2Name || '';
+  document.getElementById('p1-deck').textContent = s.p1Deck || '';
+  document.getElementById('p2-deck').textContent = s.p2Deck || '';
   document.getElementById('tournament-name').textContent = s.tournamentName || '';
   document.getElementById('score-left').textContent = s.scoreLeft ?? 0;
   document.getElementById('score-right').textContent = s.scoreRight ?? 0;
