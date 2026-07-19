@@ -32,7 +32,7 @@
   #timer-display.warning { color:#ffbc73; }
   #timer-display.danger { color:#ff7078; animation:pulse .8s infinite; }
   #phase-display { color:var(--muted); font-size:30px; font-weight:900; text-shadow:0 2px 8px rgba(0,0,0,.8); }
-  #tournament-name { color:var(--gold); font-size:26px; font-weight:900; text-shadow:0 2px 8px rgba(0,0,0,.85); }
+  #tournament-name { position:absolute; left:50%; bottom:28px; transform:translateX(-50%); z-index:8; width:min(960px,calc(100% - 760px)); color:var(--gold); font-size:34px; line-height:1; font-weight:900; text-align:center; text-shadow:0 3px 12px rgba(0,0,0,.86); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .score { position:absolute; left:50%; top:132px; transform:translateX(-50%); display:flex; gap:18px; align-items:center; font-family:'Bebas Neue',sans-serif; font-size:96px; line-height:.8; text-shadow:0 5px 16px rgba(0,0,0,.9); z-index:5; }
   .score .sep { color:var(--gold); }
   .image-side { position:absolute; top:250px; bottom:42px; width:330px; display:grid; z-index:3; }
@@ -61,7 +61,6 @@
       <div class="center">
         <div id="timer-display">40:00</div>
         <div id="phase-display">대기중 · 1세트</div>
-        <div id="tournament-name"></div>
       </div>
       <div class="player right">
         <div class="name" id="p2-name"></div>
@@ -70,6 +69,7 @@
     </div>
 
     <div class="score"><span id="score-left">0</span><span class="sep">:</span><span id="score-right">0</span></div>
+    <div id="tournament-name"></div>
 
     <div class="image-side left">
       <div class="image-slot"><img id="left-img-1" alt="좌측 플레이어 샘플 덱 이미지"></div>
