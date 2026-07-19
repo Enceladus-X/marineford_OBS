@@ -1,0 +1,42 @@
+name: Update Preview Version
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "docs/preview/**"
+      - "scripts/write_preview_version.py"
+      - ".github/workflows/preview-version.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-preview-version:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Write preview version metadata
+        run: python3 scripts/write_preview_version.py
+        env:
+          PREVIEW_VERSION_SOURCE_SHA: ${{ github.sha }}
+          PREVIEW_VERSION_BRANCH: ${{ github.ref_name }}
+
+      - name: Commit version metadata
+        run: |
+          if git diff --quiet -- docs/preview/version.json; then
+            echo "version.json is already current."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/preview/version.json
+          git commit -m "Update preview version [skip ci]"
+          git push

@@ -7,16 +7,26 @@
 
 목표:
 - 단순 다운로드 버튼이 아니라, 사용자가 실제 OBS 송출 화면이 어떤 형태인지 웹에서 미리 볼 수 있어야 한다.
-- 실제 프로그램 서버를 웹에 띄우면 안 된다. 웹 미리보기는 정적 데모 iframe만 사용한다.
+- 실제 프로그램 서버를 웹에 띄우면 안 된다. 웹 미리보기는 Marineford OBS GitHub Pages에 배포된 정적 데모만 사용한다.
 - 실행 파일은 웹 서버에 직접 올리지 말고 GitHub Releases 최신 파일로 연결한다.
+- Marineford OBS 저장소에서 미리보기를 수정하고 main에 push하면, 기존 웹 페이지는 같은 embed.js URL을 유지하면서 최신 미리보기를 보여줘야 한다.
 
 사용할 정적 미리보기:
 - 전체 데모 페이지: https://enceladus-x.github.io/marineford_OBS/preview/
 - iframe용 송출 화면: https://enceladus-x.github.io/marineford_OBS/preview/overlay.html?demo=duel
+- 기존 웹 페이지 삽입 스크립트: https://enceladus-x.github.io/marineford_OBS/preview/embed.js
+- 캐시 무효화 메타데이터: https://enceladus-x.github.io/marineford_OBS/preview/version.json
 
 다운로드 링크:
 - Windows 실행 파일: https://github.com/Enceladus-X/marineford_OBS/releases/latest/download/Marineford_OBS.exe
 - 릴리스 노트: https://github.com/Enceladus-X/marineford_OBS/releases/latest
+
+권장 삽입 방식:
+<div id="marineford-preview"></div>
+<script src="https://enceladus-x.github.io/marineford_OBS/preview/embed.js"></script>
+
+이 스크립트는 섹션 UI, 상태 전환 버튼, 16:9 iframe, 다운로드 버튼, 릴리스 노트 링크, 사용 흐름을 자동으로 렌더링한다.
+직접 iframe을 하드코딩하지 말고 가능하면 embed.js를 사용한다.
 
 필수 UI:
 - 섹션 제목: Marineford OBS
@@ -34,9 +44,9 @@
   3. OBS에 overlay URL을 브라우저 소스로 추가한다.
   4. 태블릿에서 듀얼 시작, 승패 보고, 저지 호출을 조작한다.
 
-iframe 기본 코드:
+embed.js를 쓸 수 없는 경우에만 iframe 기본 코드를 사용한다:
 <iframe
-  src="https://enceladus-x.github.io/marineford_OBS/preview/overlay.html?demo=duel"
+  src="https://enceladus-x.github.io/marineford_OBS/preview/overlay.html?demo=duel&v=latest"
   title="Marineford OBS 송출 화면 미리보기"
   style="width:100%;aspect-ratio:16/9;border:0;border-radius:8px;background:#050506;"
   loading="lazy">
@@ -50,13 +60,13 @@ iframe 기본 코드:
 
 주의:
 - 실제 매장 프리셋, state.json, deck_presets.json, 업로드 이미지, 백업 파일을 웹에 올리지 않는다.
-- iframe 출처가 차단되지 않도록 CSP가 있다면 frame-src에 https://enceladus-x.github.io 를 허용한다.
+- 스크립트와 iframe 출처가 차단되지 않도록 CSP가 있다면 script-src와 frame-src에 https://enceladus-x.github.io 를 허용한다.
 - GitHub Pages 주소가 바뀌면 /preview/ 경로만 실제 배포 주소에 맞게 조정한다.
 
 검증:
 - 데스크톱과 모바일 폭에서 iframe 비율이 16:9로 유지되는지 확인한다.
 - 4개 상태 버튼이 iframe src를 바꾸는지 확인한다.
+- iframe src에 version.json 기반 v 파라미터가 붙는지 확인한다.
 - 다운로드 버튼이 GitHub Releases 최신 실행 파일로 연결되는지 확인한다.
 - 릴리스 노트 링크가 latest release로 연결되는지 확인한다.
 ```
-

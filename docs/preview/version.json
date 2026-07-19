@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "name": "Marineford OBS Preview",
+  "branch": "main",
+  "commit": "44d7ae4",
+  "fullCommit": "44d7ae483f29490eb4a9be4488fc54da2374ca66",
+  "cacheKey": "44d7ae4",
+  "updatedAt": "2026-07-19T14:18:29Z",
+  "source": "local",
+  "overlayPath": "overlay.html",
+  "embedPath": "embed.js"
+}
