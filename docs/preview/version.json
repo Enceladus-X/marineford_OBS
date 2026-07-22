@@ -2,11 +2,12 @@
   "schema": 1,
   "name": "Marineford OBS Preview",
   "branch": "main",
-  "commit": "1114e7a",
-  "fullCommit": "1114e7a93d80487e2181ac5adbfceb29faa61f01",
-  "cacheKey": "1114e7a-1",
-  "updatedAt": "2026-07-19T14:22:40Z",
+  "commit": "35b1f65",
+  "fullCommit": "35b1f65aa9b9c0ec5ed4c5cd686b234c49f11163",
+  "cacheKey": "35b1f65-2",
+  "updatedAt": "2026-07-22T03:33:17Z",
   "source": "github-actions",
   "overlayPath": "overlay.html",
+  "panelPath": "panel.html",
   "embedPath": "embed.js"
 }
