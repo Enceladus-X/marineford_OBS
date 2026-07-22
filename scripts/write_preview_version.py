@@ -51,6 +51,7 @@ def main() -> None:
         "updatedAt": updated_at,
         "source": "github-actions" if os.environ.get("GITHUB_ACTIONS") else "local",
         "overlayPath": "overlay.html",
+        "panelPath": "panel.html",
         "embedPath": "embed.js",
     }
 

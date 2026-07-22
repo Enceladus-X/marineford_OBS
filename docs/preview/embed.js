@@ -5,12 +5,24 @@
   var defaultBaseUrl = currentScript ? new URL("./", currentScript.src).href : new URL("./", window.location.href).href;
   var defaultDownloadUrl = "https://github.com/Enceladus-X/marineford_OBS/releases/latest/download/Marineford_OBS.exe";
   var defaultReleaseUrl = "https://github.com/Enceladus-X/marineford_OBS/releases/latest";
+  var screens = [
+    ["control", "컨트롤 패널"],
+    ["tablet", "태블릿 패널"],
+    ["overlay", "OBS 오버레이"],
+    ["editor", "편집 로그"],
+  ];
   var demos = [
     ["duel", "듀얼중"],
     ["side", "사이드 교체중"],
     ["judge", "저지 호출"],
     ["standby", "다음 라운드 대기"],
   ];
+  var screenNotes = {
+    control: "송출 연결, 룰, 플레이어와 덱 프리셋을 준비하는 운영 화면",
+    tablet: "방송 테이블에서 듀얼 시작, 승패 보고와 저지 호출을 조작하는 화면",
+    overlay: "1920 × 1080 OBS 브라우저 소스에 표시되는 방송 화면",
+    editor: "듀얼 구간, 이벤트 로그와 편집 자료를 확인하는 화면",
+  };
 
   function escapeHtml(value) {
     return String(value).replace(/[&<>"']/g, function (char) {
@@ -41,17 +53,22 @@
       ".mfobs-preview__download{background:var(--mf-blue);box-shadow:0 10px 26px rgba(100,114,229,.25)}",
       ".mfobs-preview__release{border:1px solid var(--mf-line);background:rgba(255,255,255,.045)}",
       ".mfobs-preview__shell{border:1px solid var(--mf-line);border-radius:8px;overflow:hidden;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.025));box-shadow:0 22px 70px rgba(0,0,0,.36)}",
-      ".mfobs-preview__toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px;border-bottom:1px solid var(--mf-line);background:rgba(255,255,255,.035)}",
+      ".mfobs-preview__toolbar{display:grid;gap:0;border-bottom:1px solid var(--mf-line);background:rgba(255,255,255,.035)}",
+      ".mfobs-preview__screen-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,auto);gap:12px;align-items:center;padding:12px}",
+      ".mfobs-preview__state-row{display:flex;align-items:center;gap:10px;border-top:1px solid var(--mf-line);padding:9px 12px;background:rgba(0,0,0,.16)}",
+      ".mfobs-preview__state-row[hidden]{display:none}",
       ".mfobs-preview__tabs{display:flex;gap:7px;flex-wrap:wrap}",
       ".mfobs-preview__tab{min-height:34px;border:1px solid var(--mf-line);border-radius:7px;padding:0 12px;background:rgba(255,255,255,.05);color:var(--mf-muted);font-size:13px;font-weight:850;cursor:pointer;white-space:nowrap}",
       ".mfobs-preview__tab[aria-selected='true']{background:var(--mf-gold);border-color:var(--mf-gold);color:#0b0c10}",
+      ".mfobs-preview__screen-tab{min-height:39px;padding:0 15px}",
+      ".mfobs-preview__state-label{flex:0 0 auto;color:var(--mf-gold);font-size:11px;font-weight:900;letter-spacing:.08em}",
       ".mfobs-preview__note{color:var(--mf-muted);font-size:12px;font-weight:760;text-align:right}",
       ".mfobs-preview__frame-wrap{aspect-ratio:16/9;background:#050506}",
       ".mfobs-preview__frame{width:100%;height:100%;border:0;display:block}",
       ".mfobs-preview__meta{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-top:8px;color:var(--mf-muted);font-size:12px;font-weight:700}",
       ".mfobs-preview__steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:12px}",
       ".mfobs-preview__step{border:1px solid var(--mf-line);border-radius:7px;padding:10px;background:rgba(255,255,255,.035);color:var(--mf-muted);font-size:12px;line-height:1.45;font-weight:750}",
-      "@media(max-width:820px){.mfobs-preview__head,.mfobs-preview__toolbar{grid-template-columns:1fr}.mfobs-preview__actions{justify-content:flex-start}.mfobs-preview__note{text-align:left}.mfobs-preview__steps{grid-template-columns:1fr 1fr}}",
+      "@media(max-width:820px){.mfobs-preview__head,.mfobs-preview__screen-row{grid-template-columns:1fr}.mfobs-preview__actions{justify-content:flex-start}.mfobs-preview__note{text-align:left}.mfobs-preview__steps{grid-template-columns:1fr 1fr}}",
       "@media(max-width:520px){.mfobs-preview__steps{grid-template-columns:1fr}}",
     ].join("");
     document.head.appendChild(style);
@@ -76,6 +93,7 @@
     var dataset = currentScript ? currentScript.dataset : {};
     return {
       baseUrl: dataset.baseUrl || defaultBaseUrl,
+      defaultScreen: dataset.defaultScreen || "control",
       defaultDemo: dataset.defaultDemo || "duel",
       downloadUrl: dataset.downloadUrl || defaultDownloadUrl,
       releaseUrl: dataset.releaseUrl || defaultReleaseUrl,
@@ -91,9 +109,12 @@
     return url.href;
   }
 
-  function overlayUrl(baseUrl, demo, version) {
-    var url = new URL("overlay.html", baseUrl);
-    url.searchParams.set("demo", demo);
+  function previewUrl(baseUrl, screen, demo, version) {
+    var isOverlay = screen === "overlay";
+    var path = isOverlay ? (version.overlayPath || "overlay.html") : (version.panelPath || "panel.html");
+    var url = new URL(path, baseUrl);
+    if (isOverlay) url.searchParams.set("demo", demo);
+    else url.searchParams.set("screen", screen);
     url.searchParams.set("v", version.cacheKey || version.commit || String(Date.now()));
     return url.href;
   }
@@ -114,6 +135,7 @@
   }
 
   function render(target, options, version) {
+    var activeScreen = screens.some(function (item) { return item[0] === options.defaultScreen; }) ? options.defaultScreen : "control";
     var activeDemo = demos.some(function (item) { return item[0] === options.defaultDemo; }) ? options.defaultDemo : "duel";
     var steps = options.showSteps ? [
       "<div class=\"mfobs-preview__steps\">",
@@ -124,7 +146,11 @@
       "</div>",
     ].join("") : "";
     var versionLabel = version.commit && version.commit !== "live" ? "preview " + version.commit : "preview live";
-    var tabHtml = demos.map(function (item) {
+    var screenTabHtml = screens.map(function (item) {
+      var selected = item[0] === activeScreen;
+      return "<button class=\"mfobs-preview__tab mfobs-preview__screen-tab\" type=\"button\" data-mfobs-screen=\"" + item[0] + "\" aria-selected=\"" + selected + "\">" + item[1] + "</button>";
+    }).join("");
+    var demoTabHtml = demos.map(function (item) {
       var selected = item[0] === activeDemo;
       return "<button class=\"mfobs-preview__tab\" type=\"button\" data-mfobs-demo=\"" + item[0] + "\" aria-selected=\"" + selected + "\">" + item[1] + "</button>";
     }).join("");
@@ -144,11 +170,17 @@
       "</div>",
       "<div class=\"mfobs-preview__shell\">",
       "<div class=\"mfobs-preview__toolbar\">",
-      "<div class=\"mfobs-preview__tabs\" role=\"tablist\" aria-label=\"미리보기 상태 선택\">" + tabHtml + "</div>",
-      "<div class=\"mfobs-preview__note\">1920 × 1080 OBS 브라우저 소스 기준</div>",
+      "<div class=\"mfobs-preview__screen-row\">",
+      "<div class=\"mfobs-preview__tabs\" role=\"tablist\" aria-label=\"미리보기 화면 선택\">" + screenTabHtml + "</div>",
+      "<div class=\"mfobs-preview__note\" data-mfobs-note>" + escapeHtml(screenNotes[activeScreen]) + "</div>",
+      "</div>",
+      "<div class=\"mfobs-preview__state-row\" data-mfobs-overlay-controls" + (activeScreen === "overlay" ? "" : " hidden") + ">",
+      "<span class=\"mfobs-preview__state-label\">오버레이 상태</span>",
+      "<div class=\"mfobs-preview__tabs\" role=\"tablist\" aria-label=\"OBS 오버레이 상태 선택\">" + demoTabHtml + "</div>",
+      "</div>",
       "</div>",
       "<div class=\"mfobs-preview__frame-wrap\">",
-      "<iframe class=\"mfobs-preview__frame\" data-mfobs-frame title=\"Marineford OBS 송출 화면 미리보기\" loading=\"lazy\" src=\"" + escapeHtml(overlayUrl(options.baseUrl, activeDemo, version)) + "\"></iframe>",
+      "<iframe class=\"mfobs-preview__frame\" data-mfobs-frame title=\"Marineford OBS 패널 화면 미리보기\" loading=\"lazy\" src=\"" + escapeHtml(previewUrl(options.baseUrl, activeScreen, activeDemo, version)) + "\"></iframe>",
       "</div>",
       "</div>",
       "<div class=\"mfobs-preview__meta\">",
@@ -159,13 +191,30 @@
       "</section>",
     ].join("");
 
+    var frame = target.querySelector("[data-mfobs-frame]");
+    var overlayControls = target.querySelector("[data-mfobs-overlay-controls]");
+    var note = target.querySelector("[data-mfobs-note]");
+
+    target.querySelectorAll("[data-mfobs-screen]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        activeScreen = button.getAttribute("data-mfobs-screen");
+        target.querySelectorAll("[data-mfobs-screen]").forEach(function (tab) {
+          tab.setAttribute("aria-selected", String(tab === button));
+        });
+        overlayControls.hidden = activeScreen !== "overlay";
+        note.textContent = screenNotes[activeScreen] || "Marineford OBS 정적 패널 미리보기";
+        frame.src = previewUrl(options.baseUrl, activeScreen, activeDemo, version);
+      });
+    });
+
     target.querySelectorAll("[data-mfobs-demo]").forEach(function (button) {
       button.addEventListener("click", function () {
         var demo = button.getAttribute("data-mfobs-demo");
+        activeDemo = demo;
         target.querySelectorAll("[data-mfobs-demo]").forEach(function (tab) {
           tab.setAttribute("aria-selected", String(tab === button));
         });
-        target.querySelector("[data-mfobs-frame]").src = overlayUrl(options.baseUrl, demo, version);
+        if (activeScreen === "overlay") frame.src = previewUrl(options.baseUrl, activeScreen, activeDemo, version);
       });
     });
   }
@@ -182,6 +231,7 @@
   }
 
   window.MarinefordOBSPreview = {
+    version: 2,
     mount: mount,
   };
 

@@ -4,6 +4,7 @@
 
 ## 구조
 
+- `panel.html`: 컨트롤, 태블릿, 편집 로그 화면의 안전한 정적 데모
 - `overlay.html`: iframe 안에서 보이는 OBS 송출 화면 정적 데모
 - `embed.js`: 기존 웹 페이지에 붙이는 동적 위젯 스크립트
 - `index.html`: 데모 위젯을 단독으로 확인하는 페이지
@@ -17,7 +18,7 @@
 <script src="https://enceladus-x.github.io/marineford_OBS/preview/embed.js"></script>
 ```
 
-`embed.js`는 자동으로 `version.json`을 읽고 iframe URL에 `v=` 값을 붙입니다. 따라서 이 저장소에서 미리보기 화면을 수정하고 `main`에 push하면 기존 웹 페이지는 같은 스크립트 URL을 유지하면서 최신 overlay 데모를 보여줍니다.
+`embed.js`는 자동으로 `version.json`을 읽고 iframe URL에 `v=` 값을 붙입니다. 화면 탭에서 컨트롤 패널, 태블릿 패널, OBS 오버레이, 편집 로그를 전환할 수 있고, OBS 오버레이에서는 경기 상태를 다시 선택할 수 있습니다. 따라서 이 저장소에서 미리보기 화면을 수정하고 `main`에 push하면 기존 웹 페이지는 같은 스크립트 URL을 유지하면서 최신 정적 데모를 보여줍니다.
 
 ## 옵션
 
@@ -28,6 +29,7 @@
 <script
   src="https://enceladus-x.github.io/marineford_OBS/preview/embed.js"
   data-target="#marineford-preview"
+  data-default-screen="control"
   data-default-demo="duel"
   data-title="Marineford OBS"
   data-description="TCG 매장 방송 송출용 컨트롤 패널입니다."
@@ -39,6 +41,7 @@
 
 - `data-target`: 위젯을 넣을 CSS selector
 - `data-base-url`: `overlay.html`과 `version.json`이 있는 기준 URL
+- `data-default-screen`: `control`, `tablet`, `overlay`, `editor`
 - `data-default-demo`: `duel`, `side`, `judge`, `standby`
 - `data-download-url`: 실행 파일 다운로드 URL
 - `data-release-url`: 릴리스 노트 URL
@@ -54,6 +57,7 @@
 <script src="https://enceladus-x.github.io/marineford_OBS/preview/embed.js" data-auto-mount="false"></script>
 <script>
   MarinefordOBSPreview.mount("#custom-preview", {
+    defaultScreen: "overlay",
     defaultDemo: "judge",
     showSteps: false
   });
